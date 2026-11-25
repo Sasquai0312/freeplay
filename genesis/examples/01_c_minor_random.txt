@@ -1,0 +1,21 @@
+generator: melody_uniform
+seed: 1001
+root: 60
+scale: natural_minor
+tempo_bpm: 120
+pattern_length: 16
+settings: euclidean E(12,16) tps=120
+event_count: 12
+events:
+  tick=120 note=50 vel=88 dur=100 ch=0
+  tick=240 note=72 vel=98 dur=100 ch=0
+  tick=360 note=48 vel=70 dur=100 ch=0
+  tick=600 note=65 vel=72 dur=100 ch=0
+  tick=720 note=63 vel=108 dur=100 ch=0
+  tick=840 note=53 vel=104 dur=100 ch=0
+  tick=1080 note=70 vel=104 dur=100 ch=0
+  tick=1200 note=70 vel=71 dur=100 ch=0
+  tick=1320 note=63 vel=96 dur=100 ch=0
+  tick=1560 note=65 vel=103 dur=100 ch=0
+  tick=1680 note=62 vel=105 dur=100 ch=0
+  tick=1800 note=60 vel=71 dur=100 ch=0

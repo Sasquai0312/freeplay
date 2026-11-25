@@ -1,0 +1,14 @@
+generator: euclid+melody
+seed: 4004
+root: 36
+scale: natural_minor
+tempo_bpm: 120
+pattern_length: 16
+settings: E(5,16) bass
+event_count: 5
+events:
+  tick=360 note=46 vel=106 dur=200 ch=0
+  tick=720 note=43 vel=106 dur=200 ch=0
+  tick=1080 note=44 vel=102 dur=200 ch=0
+  tick=1440 note=48 vel=110 dur=200 ch=0
+  tick=1800 note=48 vel=106 dur=200 ch=0

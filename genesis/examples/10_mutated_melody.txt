@@ -1,0 +1,21 @@
+generator: mutate_pitch
+seed: 55
+root: 60
+scale: major
+tempo_bpm: 120
+pattern_length: 16
+settings: mutate_prob=40 seed_rng=99
+event_count: 12
+events:
+  tick=120 note=77 vel=86 dur=100 ch=0
+  tick=240 note=69 vel=85 dur=100 ch=0
+  tick=360 note=74 vel=99 dur=100 ch=0
+  tick=600 note=57 vel=94 dur=100 ch=0
+  tick=720 note=69 vel=88 dur=100 ch=0
+  tick=840 note=77 vel=80 dur=100 ch=0
+  tick=1080 note=64 vel=98 dur=100 ch=0
+  tick=1200 note=55 vel=85 dur=100 ch=0
+  tick=1320 note=69 vel=89 dur=100 ch=0
+  tick=1560 note=69 vel=91 dur=100 ch=0
+  tick=1680 note=62 vel=88 dur=100 ch=0
+  tick=1800 note=57 vel=95 dur=100 ch=0

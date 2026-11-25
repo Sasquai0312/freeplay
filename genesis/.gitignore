@@ -1,0 +1,5 @@
+*.o
+tests/test_genesis
+tools/gen_demos
+build/
+__pycache__/

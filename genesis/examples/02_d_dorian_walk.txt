@@ -1,0 +1,19 @@
+generator: melody_walk
+seed: 2002
+root: 62
+scale: dorian
+tempo_bpm: 120
+pattern_length: 16
+settings: max_interval=2 repeat=15%
+event_count: 10
+events:
+  tick=0 note=52 vel=96 dur=110 ch=0
+  tick=120 note=55 vel=83 dur=110 ch=0
+  tick=360 note=57 vel=85 dur=110 ch=0
+  tick=600 note=53 vel=98 dur=110 ch=0
+  tick=720 note=50 vel=95 dur=110 ch=0
+  tick=960 note=52 vel=89 dur=110 ch=0
+  tick=1080 note=55 vel=99 dur=110 ch=0
+  tick=1320 note=52 vel=81 dur=110 ch=0
+  tick=1560 note=50 vel=98 dur=110 ch=0
+  tick=1680 note=50 vel=99 dur=110 ch=0

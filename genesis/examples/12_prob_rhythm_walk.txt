@@ -1,0 +1,20 @@
+generator: prob+walk
+seed: 12
+root: 57
+scale: minor_pent
+tempo_bpm: 120
+pattern_length: 16
+settings: density=60%
+event_count: 11
+events:
+  tick=0 note=45 vel=91 dur=90 ch=0
+  tick=120 note=50 vel=79 dur=90 ch=0
+  tick=240 note=57 vel=82 dur=90 ch=0
+  tick=360 note=64 vel=92 dur=90 ch=0
+  tick=600 note=67 vel=89 dur=90 ch=0
+  tick=960 note=60 vel=92 dur=90 ch=0
+  tick=1080 note=62 vel=77 dur=90 ch=0
+  tick=1200 note=69 vel=111 dur=90 ch=0
+  tick=1320 note=62 vel=82 dur=90 ch=0
+  tick=1440 note=64 vel=103 dur=90 ch=0
+  tick=1680 note=69 vel=105 dur=90 ch=0

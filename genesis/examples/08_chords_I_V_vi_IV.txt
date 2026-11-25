@@ -1,0 +1,21 @@
+generator: harmony_prog
+seed: 0
+root: 60
+scale: major
+tempo_bpm: 120
+pattern_length: 4
+settings: I-V-vi-IV
+event_count: 12
+events:
+  tick=0 note=60 vel=90 dur=400 ch=0
+  tick=0 note=64 vel=90 dur=400 ch=0
+  tick=0 note=67 vel=90 dur=400 ch=0
+  tick=480 note=67 vel=90 dur=400 ch=0
+  tick=480 note=71 vel=90 dur=400 ch=0
+  tick=480 note=74 vel=90 dur=400 ch=0
+  tick=960 note=69 vel=90 dur=400 ch=0
+  tick=960 note=72 vel=90 dur=400 ch=0
+  tick=960 note=76 vel=90 dur=400 ch=0
+  tick=1440 note=65 vel=90 dur=400 ch=0
+  tick=1440 note=69 vel=90 dur=400 ch=0
+  tick=1440 note=72 vel=90 dur=400 ch=0
