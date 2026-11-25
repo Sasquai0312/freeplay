@@ -18,7 +18,8 @@
         "-mfloat-abi=hard"
       ],
       "include": [
-        "."
+        ".",
+        "../../../genesis/include"
       ],
       "symbols": [
         "symbols.ld"
@@ -229,7 +230,15 @@
           "../../src/mod.c",
           "../../src/lfoui.c",
           "../../src/ccpreset.c",
-          "../../src/slicer.c"
+          "../../src/slicer.c",
+          "../../../genesis/engine/event.c",
+          "../../../genesis/engine/random.c",
+          "../../../genesis/engine/scales.c",
+          "../../../genesis/engine/rhythm.c",
+          "../../../genesis/engine/melody.c",
+          "../../../genesis/engine/arpeggiator.c",
+          "../../src/genesis_adapt.c",
+          "../../src/genesis_aeabi.c"
         ]
       }
     }

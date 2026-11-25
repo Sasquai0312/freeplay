@@ -1,0 +1,933 @@
+{
+  "passed": true,
+  "n_pass": 42,
+  "n_total": 42,
+  "pattern_length": 16,
+  "fixtures": {
+    "A_melody_minor": {
+      "rc": 0,
+      "events": 14,
+      "obs": [
+        {
+          "step": 0,
+          "on": true,
+          "note": 68,
+          "vel": 107,
+          "dur": 60
+        },
+        {
+          "step": 1,
+          "on": true,
+          "note": 63,
+          "vel": 80,
+          "dur": 60
+        },
+        {
+          "step": 2,
+          "on": true,
+          "note": 58,
+          "vel": 86,
+          "dur": 60
+        },
+        {
+          "step": 3,
+          "on": true,
+          "note": 48,
+          "vel": 87,
+          "dur": 60
+        },
+        {
+          "step": 4,
+          "on": true,
+          "note": 55,
+          "vel": 69,
+          "dur": 60
+        },
+        {
+          "step": 5,
+          "on": true,
+          "note": 60,
+          "vel": 106,
+          "dur": 60
+        },
+        {
+          "step": 6,
+          "on": true,
+          "note": 70,
+          "vel": 106,
+          "dur": 60
+        },
+        {
+          "step": 7,
+          "on": true,
+          "note": 50,
+          "vel": 85,
+          "dur": 60
+        },
+        {
+          "step": 9,
+          "on": true,
+          "note": 48,
+          "vel": 102,
+          "dur": 60
+        },
+        {
+          "step": 10,
+          "on": true,
+          "note": 60,
+          "vel": 101,
+          "dur": 60
+        },
+        {
+          "step": 11,
+          "on": true,
+          "note": 53,
+          "vel": 93,
+          "dur": 60
+        },
+        {
+          "step": 13,
+          "on": true,
+          "note": 62,
+          "vel": 107,
+          "dur": 60
+        },
+        {
+          "step": 14,
+          "on": true,
+          "note": 60,
+          "vel": 100,
+          "dur": 60
+        },
+        {
+          "step": 15,
+          "on": true,
+          "note": 53,
+          "vel": 91,
+          "dur": 60
+        }
+      ]
+    },
+    "B_euclidean_dorian": {
+      "rc": 0,
+      "events": 5,
+      "obs": [
+        {
+          "step": 3,
+          "on": true,
+          "note": 36,
+          "vel": 95,
+          "dur": 60
+        },
+        {
+          "step": 6,
+          "on": true,
+          "note": 47,
+          "vel": 100,
+          "dur": 60
+        },
+        {
+          "step": 9,
+          "on": true,
+          "note": 47,
+          "vel": 99,
+          "dur": 60
+        },
+        {
+          "step": 12,
+          "on": true,
+          "note": 52,
+          "vel": 88,
+          "dur": 60
+        },
+        {
+          "step": 15,
+          "on": true,
+          "note": 55,
+          "vel": 96,
+          "dur": 60
+        }
+      ]
+    },
+    "D_arp_up": {
+      "rc": 0,
+      "events": 16,
+      "obs": [
+        {
+          "step": 0,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 1,
+          "on": true,
+          "note": 64,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 2,
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 3,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 4,
+          "on": true,
+          "note": 64,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 5,
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 6,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 7,
+          "on": true,
+          "note": 64,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 8,
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 9,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 10,
+          "on": true,
+          "note": 64,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 11,
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 12,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 13,
+          "on": true,
+          "note": 64,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 14,
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        },
+        {
+          "step": 15,
+          "on": true,
+          "note": 60,
+          "vel": 96,
+          "dur": 60
+        }
+      ]
+    },
+    "C_walk_pent": {
+      "skipped": true,
+      "plen": 16
+    }
+  },
+  "abi": {
+    "fixtures": {
+      "A": {
+        "match": true,
+        "n": 14
+      },
+      "B": {
+        "match": true,
+        "n": 5
+      },
+      "D": {
+        "match": true,
+        "n": 16
+      }
+    }
+  },
+  "results": [
+    {
+      "name": "validate external MIDI track 8",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "reject sample track 0",
+      "pass": true,
+      "detail": -1
+    },
+    {
+      "name": "pattern length readable",
+      "pass": true,
+      "detail": 16
+    },
+    {
+      "name": "timing dur quarter",
+      "pass": true,
+      "detail": {
+        "native": 15,
+        "expect": 15,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing dur half",
+      "pass": true,
+      "detail": {
+        "native": 30,
+        "expect": 30,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing dur full",
+      "pass": true,
+      "detail": {
+        "native": 60,
+        "expect": 60,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing dur multi",
+      "pass": true,
+      "detail": {
+        "native": 120,
+        "expect": 120,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing dur min_approx",
+      "pass": true,
+      "detail": {
+        "native": 1,
+        "expect": 1,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing dur max",
+      "pass": true,
+      "detail": {
+        "native": 3840,
+        "expect": 3840,
+        "rc": 0
+      }
+    },
+    {
+      "name": "timing step 0",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "st": 0
+      }
+    },
+    {
+      "name": "timing step last-16",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "st": 15
+      }
+    },
+    {
+      "name": "timing reject off-grid",
+      "pass": true,
+      "detail": {
+        "rc": -7,
+        "st": 0
+      }
+    },
+    {
+      "name": "preview fixture A rc",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "valid": 1,
+        "event_count": 14
+      }
+    },
+    {
+      "name": "preview no native mutation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "fixture A_melody_minor apply+readback",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "n": 14,
+        "sample_unchanged": true,
+        "obs": [
+          {
+            "step": 0,
+            "on": true,
+            "note": 68,
+            "vel": 107,
+            "dur": 60
+          },
+          {
+            "step": 1,
+            "on": true,
+            "note": 63,
+            "vel": 80,
+            "dur": 60
+          },
+          {
+            "step": 2,
+            "on": true,
+            "note": 58,
+            "vel": 86,
+            "dur": 60
+          },
+          {
+            "step": 3,
+            "on": true,
+            "note": 48,
+            "vel": 87,
+            "dur": 60
+          },
+          {
+            "step": 4,
+            "on": true,
+            "note": 55,
+            "vel": 69,
+            "dur": 60
+          },
+          {
+            "step": 5,
+            "on": true,
+            "note": 60,
+            "vel": 106,
+            "dur": 60
+          },
+          {
+            "step": 6,
+            "on": true,
+            "note": 70,
+            "vel": 106,
+            "dur": 60
+          },
+          {
+            "step": 7,
+            "on": true,
+            "note": 50,
+            "vel": 85,
+            "dur": 60
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixture A_melody_minor restore",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "restored": true
+      }
+    },
+    {
+      "name": "fixture B_euclidean_dorian apply+readback",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "n": 5,
+        "sample_unchanged": true,
+        "obs": [
+          {
+            "step": 3,
+            "on": true,
+            "note": 36,
+            "vel": 95,
+            "dur": 60
+          },
+          {
+            "step": 6,
+            "on": true,
+            "note": 47,
+            "vel": 100,
+            "dur": 60
+          },
+          {
+            "step": 9,
+            "on": true,
+            "note": 47,
+            "vel": 99,
+            "dur": 60
+          },
+          {
+            "step": 12,
+            "on": true,
+            "note": 52,
+            "vel": 88,
+            "dur": 60
+          },
+          {
+            "step": 15,
+            "on": true,
+            "note": 55,
+            "vel": 96,
+            "dur": 60
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixture B_euclidean_dorian restore",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "restored": true
+      }
+    },
+    {
+      "name": "fixture D_arp_up apply+readback",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "n": 16,
+        "sample_unchanged": true,
+        "obs": [
+          {
+            "step": 0,
+            "on": true,
+            "note": 60,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 1,
+            "on": true,
+            "note": 64,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 2,
+            "on": true,
+            "note": 67,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 3,
+            "on": true,
+            "note": 60,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 4,
+            "on": true,
+            "note": 64,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 5,
+            "on": true,
+            "note": 67,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 6,
+            "on": true,
+            "note": 60,
+            "vel": 96,
+            "dur": 60
+          },
+          {
+            "step": 7,
+            "on": true,
+            "note": 64,
+            "vel": 96,
+            "dur": 60
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixture D_arp_up restore",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "restored": true
+      }
+    },
+    {
+      "name": "fixture C_walk_pent skipped (pattern len 16 < 32)",
+      "pass": true,
+      "detail": {
+        "plen": 16,
+        "need": 32
+      }
+    },
+    {
+      "name": "EMPTY_ONLY rejects occupied",
+      "pass": true,
+      "detail": -8
+    },
+    {
+      "name": "REPLACE_REGION apply",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "step2": {
+          "on": true,
+          "note": 67,
+          "vel": 96,
+          "dur": 60
+        }
+      }
+    },
+    {
+      "name": "REPLACE_REGION restore",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "midi": {
+          "on": true,
+          "note": 40,
+          "vel": 80,
+          "dur": 60
+        }
+      }
+    },
+    {
+      "name": "fail inject before_snap",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject after_snap",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject before_write",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject after_first_write",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject mid_edit",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject before_commit",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail inject during_restore recovery-required",
+      "pass": true,
+      "detail": {
+        "rc": -11,
+        "before": 0,
+        "after": 16
+      }
+    },
+    {
+      "name": "repeated generate+apply+restore",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "EMPTY_ONLY only activates generated steps",
+      "pass": true,
+      "detail": {
+        "on": [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        "rc": 0
+      }
+    },
+    {
+      "name": "EMPTY_ONLY restore occupancy",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "before_on": 0,
+        "after_on": 0
+      }
+    },
+    {
+      "name": "ABI reject NULL gen_gen_req",
+      "pass": true,
+      "detail": -12
+    },
+    {
+      "name": "ABI reject bad fixture id",
+      "pass": true,
+      "detail": -12
+    },
+    {
+      "name": "ABI reject oversize capacity",
+      "pass": true,
+      "detail": -4
+    },
+    {
+      "name": "ABI equiv host vs call_fn fixture A",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "host_n": 14,
+        "fw_n": 14,
+        "repeat": true,
+        "host0": [
+          {
+            "tick": 0,
+            "note": 68,
+            "vel": 107,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 480,
+            "note": 63,
+            "vel": 80,
+            "dur": 480,
+            "ch": 0
+          }
+        ],
+        "fw0": [
+          {
+            "tick": 0,
+            "note": 68,
+            "vel": 107,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 480,
+            "note": 63,
+            "vel": 80,
+            "dur": 480,
+            "ch": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ABI equiv host vs call_fn fixture B",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "host_n": 5,
+        "fw_n": 5,
+        "repeat": true,
+        "host0": [
+          {
+            "tick": 1440,
+            "note": 36,
+            "vel": 95,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 2880,
+            "note": 47,
+            "vel": 100,
+            "dur": 480,
+            "ch": 0
+          }
+        ],
+        "fw0": [
+          {
+            "tick": 1440,
+            "note": 36,
+            "vel": 95,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 2880,
+            "note": 47,
+            "vel": 100,
+            "dur": 480,
+            "ch": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ABI equiv host vs call_fn fixture D",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "host_n": 16,
+        "fw_n": 16,
+        "repeat": true,
+        "host0": [
+          {
+            "tick": 0,
+            "note": 60,
+            "vel": 96,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 480,
+            "note": 64,
+            "vel": 96,
+            "dur": 480,
+            "ch": 0
+          }
+        ],
+        "fw0": [
+          {
+            "tick": 0,
+            "note": 60,
+            "vel": 96,
+            "dur": 480,
+            "ch": 0
+          },
+          {
+            "tick": 480,
+            "note": 64,
+            "vel": 96,
+            "dur": 480,
+            "ch": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ABI preview matches generate (D)",
+      "pass": true,
+      "detail": {
+        "prev": [
+          [
+            0,
+            60
+          ],
+          [
+            1,
+            64
+          ],
+          [
+            2,
+            67
+          ],
+          [
+            3,
+            60
+          ],
+          [
+            4,
+            64
+          ],
+          [
+            5,
+            67
+          ]
+        ],
+        "gen": [
+          [
+            0,
+            60
+          ],
+          [
+            1,
+            64
+          ],
+          [
+            2,
+            67
+          ],
+          [
+            3,
+            60
+          ],
+          [
+            4,
+            64
+          ],
+          [
+            5,
+            67
+          ]
+        ]
+      }
+    },
+    {
+      "name": "caps monophonic bit",
+      "pass": true,
+      "detail": "0x60d"
+    }
+  ],
+  "caps": 1549
+}
