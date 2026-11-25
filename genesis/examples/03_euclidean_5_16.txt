@@ -1,0 +1,14 @@
+generator: rhythm_euclidean
+seed: 0
+root: 62
+scale: n/a
+tempo_bpm: 120
+pattern_length: 16
+settings: E(5,16)
+event_count: 5
+events:
+  tick=360 note=62 vel=100 dur=60 ch=9
+  tick=720 note=62 vel=100 dur=60 ch=9
+  tick=1080 note=62 vel=100 dur=60 ch=9
+  tick=1440 note=62 vel=100 dur=60 ch=9
+  tick=1800 note=62 vel=100 dur=60 ch=9

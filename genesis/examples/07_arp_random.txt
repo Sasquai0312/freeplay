@@ -1,0 +1,25 @@
+generator: arp_random
+seed: 777
+root: 60
+scale: Cmaj7
+tempo_bpm: 120
+pattern_length: 16
+settings: octaves=2
+event_count: 16
+events:
+  tick=0 note=60 vel=100 dur=100 ch=0
+  tick=120 note=67 vel=100 dur=100 ch=0
+  tick=240 note=76 vel=100 dur=100 ch=0
+  tick=360 note=72 vel=100 dur=100 ch=0
+  tick=480 note=71 vel=100 dur=100 ch=0
+  tick=600 note=79 vel=100 dur=100 ch=0
+  tick=720 note=83 vel=100 dur=100 ch=0
+  tick=840 note=64 vel=100 dur=100 ch=0
+  tick=960 note=60 vel=100 dur=100 ch=0
+  tick=1080 note=67 vel=100 dur=100 ch=0
+  tick=1200 note=76 vel=100 dur=100 ch=0
+  tick=1320 note=72 vel=100 dur=100 ch=0
+  tick=1440 note=71 vel=100 dur=100 ch=0
+  tick=1560 note=79 vel=100 dur=100 ch=0
+  tick=1680 note=83 vel=100 dur=100 ch=0
+  tick=1800 note=64 vel=100 dur=100 ch=0

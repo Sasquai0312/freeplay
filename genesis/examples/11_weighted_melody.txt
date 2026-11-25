@@ -1,0 +1,21 @@
+generator: melody_weighted
+seed: 321
+root: 60
+scale: major
+tempo_bpm: 120
+pattern_length: 16
+settings: weights=8,1,4,1,6,2,1
+event_count: 12
+events:
+  tick=120 note=67 vel=108 dur=100 ch=0
+  tick=240 note=67 vel=91 dur=100 ch=0
+  tick=360 note=84 vel=81 dur=100 ch=0
+  tick=600 note=72 vel=83 dur=100 ch=0
+  tick=720 note=67 vel=77 dur=100 ch=0
+  tick=840 note=65 vel=103 dur=100 ch=0
+  tick=1080 note=79 vel=78 dur=100 ch=0
+  tick=1200 note=79 vel=97 dur=100 ch=0
+  tick=1320 note=79 vel=102 dur=100 ch=0
+  tick=1560 note=74 vel=74 dur=100 ch=0
+  tick=1680 note=62 vel=87 dur=100 ch=0
+  tick=1800 note=84 vel=93 dur=100 ch=0

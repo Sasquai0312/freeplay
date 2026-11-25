@@ -1,0 +1,21 @@
+generator: harmony_voice_led
+seed: 0
+root: 60
+scale: major
+tempo_bpm: 120
+pattern_length: 4
+settings: I-V-vi-IV voice_lead
+event_count: 12
+events:
+  tick=0 note=60 vel=90 dur=400 ch=0
+  tick=0 note=64 vel=90 dur=400 ch=0
+  tick=0 note=67 vel=90 dur=400 ch=0
+  tick=480 note=55 vel=90 dur=400 ch=0
+  tick=480 note=59 vel=90 dur=400 ch=0
+  tick=480 note=62 vel=90 dur=400 ch=0
+  tick=960 note=57 vel=90 dur=400 ch=0
+  tick=960 note=60 vel=90 dur=400 ch=0
+  tick=960 note=64 vel=90 dur=400 ch=0
+  tick=1440 note=53 vel=90 dur=400 ch=0
+  tick=1440 note=57 vel=90 dur=400 ch=0
+  tick=1440 note=60 vel=90 dur=400 ch=0
