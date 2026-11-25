@@ -1,0 +1,130 @@
+[
+  {
+    "track": 0,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 1,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 2,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 3,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 4,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 5,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 6,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 7,
+    "track_type": 0,
+    "step_vt": "0x20001ddc",
+    "vt_kind": "sample",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 8,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 9,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 10,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 11,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 12,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 13,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 14,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  },
+  {
+    "track": 15,
+    "track_type": 1,
+    "step_vt": "0x20001d74",
+    "vt_kind": "synth_or_midi",
+    "length": 16,
+    "step0_on": false
+  }
+]

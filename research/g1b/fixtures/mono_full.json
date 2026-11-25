@@ -1,0 +1,127 @@
+{
+  "length_calib": [
+    {
+      "units": 15,
+      "ui": []
+    },
+    {
+      "units": 60,
+      "ui": []
+    },
+    {
+      "units": 120,
+      "ui": []
+    },
+    {
+      "units": 240,
+      "ui": []
+    },
+    {
+      "units": 3840,
+      "ui": []
+    }
+  ],
+  "length_clamp": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      15,
+      15
+    ],
+    [
+      60,
+      60
+    ],
+    [
+      3840,
+      3840
+    ],
+    [
+      3841,
+      3840
+    ],
+    [
+      10000,
+      3840
+    ]
+  ],
+  "poly": {
+    "note_byte_deltas": [
+      [
+        31,
+        60,
+        64
+      ]
+    ],
+    "supported": false,
+    "reason": "Single getParam note index 6; no second note slot observed in step object"
+  },
+  "mono": {
+    "A": {
+      "insert": [
+        60,
+        100
+      ],
+      "modify": 67,
+      "remove_on": false,
+      "pass_": true
+    },
+    "B": {
+      "rb": [
+        {
+          "i": 0,
+          "n": 60,
+          "v": 100,
+          "en": 60,
+          "ev": 100
+        },
+        {
+          "i": 4,
+          "n": 64,
+          "v": 80,
+          "en": 64,
+          "ev": 80
+        },
+        {
+          "i": 8,
+          "n": 67,
+          "v": 110,
+          "en": 67,
+          "ev": 110
+        },
+        {
+          "i": 12,
+          "n": 72,
+          "v": 90,
+          "en": 72,
+          "ev": 90
+        }
+      ],
+      "extra": [],
+      "neighbor": true,
+      "pass_": true
+    },
+    "C": {
+      "bounds": {
+        "step0": true,
+        "step15": true,
+        "note0": true,
+        "note127": true,
+        "vel1": true,
+        "vel127": true,
+        "dur15": true,
+        "dur3840": true,
+        "reject_sample_as_midi": true,
+        "midi_type": true,
+        "step63_note": 70
+      },
+      "pass_": true
+    }
+  }
+}

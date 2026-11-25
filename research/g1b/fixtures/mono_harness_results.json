@@ -1,0 +1,89 @@
+{
+  "results": [
+    {
+      "name": "tracks 0-7 sample",
+      "pass": true,
+      "detail": [
+        "sample",
+        "sample",
+        "sample",
+        "sample",
+        "sample",
+        "sample",
+        "sample",
+        "sample"
+      ]
+    },
+    {
+      "name": "tracks 8-15 external_midi by default",
+      "pass": true,
+      "detail": [
+        "external_midi",
+        "external_midi",
+        "external_midi",
+        "external_midi",
+        "external_midi",
+        "external_midi",
+        "external_midi",
+        "external_midi"
+      ]
+    },
+    {
+      "name": "sample not classified as MIDI",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "A lifecycle",
+      "pass": true,
+      "detail": {
+        "a1": [
+          60,
+          100
+        ],
+        "a2": 67
+      }
+    },
+    {
+      "name": "B four-note",
+      "pass": true,
+      "detail": {
+        "rb": [
+          [
+            60,
+            100
+          ],
+          [
+            64,
+            80
+          ],
+          [
+            67,
+            110
+          ],
+          [
+            72,
+            90
+          ]
+        ],
+        "extra": []
+      }
+    },
+    {
+      "name": "C bounds",
+      "pass": true,
+      "detail": {
+        "step0": true,
+        "step15": true,
+        "note0": true,
+        "note127": true,
+        "vel1": true,
+        "vel127": true,
+        "dur15": true,
+        "dur3840": true,
+        "vel_clamp": true
+      }
+    }
+  ],
+  "passed": true
+}

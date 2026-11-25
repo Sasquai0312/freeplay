@@ -1,0 +1,185 @@
+{
+  "note_length": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "100",
+      "Velocity",
+      "4.00",
+      "Note Length",
+      "Pattern 1",
+      "Project"
+    ],
+    "before": {
+      "0": 64,
+      "1": 60,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": 60,
+      "7": null,
+      "8": null,
+      "9": 32,
+      "10": 0,
+      "11": 0,
+      "12": null,
+      "13": null,
+      "14": null,
+      "15": null,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": null
+    },
+    "after": {
+      "0": 64,
+      "1": 60,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": 60,
+      "7": null,
+      "8": null,
+      "9": 32,
+      "10": 0,
+      "11": 0,
+      "12": null,
+      "13": null,
+      "14": null,
+      "15": null,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": null
+    }
+  },
+  "velocity": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "95",
+      "Velocity",
+      "4.00",
+      "Note Length",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "note": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "G 4",
+      "Note",
+      "",
+      "Pitchbend",
+      "Note",
+      "G 4",
+      "Pitchbend",
+      "",
+      "C4",
+      "C5",
+      "-",
+      "+",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "pitchbend": {
+    "diff": {}
+  },
+  "chance": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "40% Chance",
+      "Chance",
+      "Play Step",
+      "Action",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "repeat": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "Broken",
+      "Repeat Type",
+      "2 Hits | 1 Step",
+      "Repeat Grid",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "channel_page": {
+    "diff": {},
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "Synth 3 (WTFM)",
+      "Device",
+      "Init",
+      "Patch",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "final_dump": {
+    "0": 64,
+    "1": 60,
+    "2": null,
+    "3": null,
+    "4": null,
+    "5": null,
+    "6": 60,
+    "7": null,
+    "8": null,
+    "9": 32,
+    "10": 0,
+    "11": 0,
+    "12": null,
+    "13": null,
+    "14": null,
+    "15": null,
+    "16": 0,
+    "17": 0,
+    "18": 0,
+    "19": 0,
+    "20": 0,
+    "21": null
+  },
+  "final_raw": "741d002040003c0000000000000000000000000000000000000000002000003c000000000000430e1f00",
+  "undo_pad": {
+    "on_after_soft9": true
+  }
+}

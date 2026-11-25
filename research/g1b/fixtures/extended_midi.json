@@ -1,0 +1,240 @@
+{
+  "p0_clamp_sample": {
+    "wrote_100": 100,
+    "wrote_5000": 5000
+  },
+  "p0_clamp_midi": {
+    "wrote_100": 100,
+    "wrote_5000": 127
+  },
+  "p1_clamp_sample": {
+    "50": 50,
+    "5000": 5000,
+    "-5000": -5000
+  },
+  "p1_clamp_midi": {
+    "50": 50,
+    "5000": 3840,
+    "-5000": 0
+  },
+  "p4_sample": {
+    "16": 16,
+    "64": 16,
+    "100": 16,
+    "127": 16,
+    "200": 16
+  },
+  "p4_midi": {
+    "16": 16,
+    "64": 64,
+    "100": 100,
+    "127": 127,
+    "200": 127
+  },
+  "discrimination": [
+    {
+      "track": 0,
+      "type": 0,
+      "inst": "0x200401d8",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 1,
+      "type": 0,
+      "inst": "0x200403e8",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 2,
+      "type": 0,
+      "inst": "0x200405f8",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 3,
+      "type": 0,
+      "inst": "0x20040808",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 4,
+      "type": 0,
+      "inst": "0x20040a18",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 5,
+      "type": 0,
+      "inst": "0x20040c28",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 6,
+      "type": 0,
+      "inst": "0x20040e38",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 7,
+      "type": 0,
+      "inst": "0x20041048",
+      "ivt": "0x600892e4",
+      "kind": "sample"
+    },
+    {
+      "track": 8,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 9,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 10,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 11,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 12,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 13,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 14,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    },
+    {
+      "track": 15,
+      "type": 1,
+      "inst": "0x0",
+      "ivt": "0x0",
+      "kind": "external_midi"
+    }
+  ],
+  "ui_note": {
+    "before": 60,
+    "after": 60,
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "E 4",
+      "Note",
+      "",
+      "Pitchbend",
+      "Note",
+      "E 4",
+      "Pitchbend",
+      "",
+      "C4",
+      "C5",
+      "-",
+      "+",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "ui_vel": {
+    "before": 100,
+    "after": 100,
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "110",
+      "Velocity",
+      "1.00",
+      "Note Length",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "ui_dur": {
+    "p1": [
+      60,
+      60
+    ],
+    "p4": [
+      null,
+      null
+    ],
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "110",
+      "Velocity",
+      "3.00",
+      "Note Length",
+      "Pattern 1",
+      "Project"
+    ]
+  },
+  "soft_undo": {
+    "ui": [
+      "",
+      "Project",
+      "Live Rec",
+      "Play",
+      "Perform",
+      "110",
+      "Velocity",
+      "3.00",
+      "Note Length",
+      "",
+      "Perform",
+      "Pattern 1",
+      "Project"
+    ],
+    "on": true,
+    "note": 60,
+    "p0": 100
+  },
+  "step_raw_hex": "741d002064003c0000000000000000000000000000000000000000002000003c000000000000430e1f80",
+  "param2_cc_candidate": 77,
+  "midi_tx": {
+    "events": 0,
+    "sample": [],
+    "usb_dev": 0
+  }
+}

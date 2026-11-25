@@ -4,6 +4,7 @@
 **Status:** COMPLETE (source-only; experimental path blocked)  
 **Primary decision (G1 source-only close):** `BLOCKED_FIRMWARE_ARTIFACT`  
 **Superseded by G1A:** `READY_FOR_G1B_MIDI_DISCOVERY` — see `research/g1a/00_firmware_recovery.md`  
+**Superseded by G1B:** `MONOPHONIC_INTEGRATION_READY` — see `research/g1b/00_executive_summary.md`  
 **Date:** 2026-11-25
 
 ## Provenance
