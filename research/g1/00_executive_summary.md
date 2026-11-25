@@ -2,7 +2,8 @@
 
 **Phase:** G1 Native MIDI Sequencer Parameter Discovery  
 **Status:** COMPLETE (source-only; experimental path blocked)  
-**Primary decision:** `BLOCKED_FIRMWARE_ARTIFACT`  
+**Primary decision (G1 source-only close):** `BLOCKED_FIRMWARE_ARTIFACT`  
+**Superseded by G1A:** `READY_FOR_G1B_MIDI_DISCOVERY` — see `research/g1a/00_firmware_recovery.md`  
 **Date:** 2026-11-25
 
 ## Provenance
