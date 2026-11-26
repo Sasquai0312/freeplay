@@ -2,6 +2,7 @@
  * Mirrors LFO/Slicer panel lifecycle. MERGE deferred. */
 #include "genesis_ui.h"
 #include "genesis_adapt.h"
+#include "genesis_evo.h"
 #include "slice.h"
 #include "dlw.h"
 #include <stddef.h>
@@ -29,11 +30,13 @@ extern void fw_toast_show(void *toast, const char *msg);
 #define PANEL_H 192
 
 enum { ST_CFG = 0, ST_PREV = 1, ST_ERR = 2, ST_CONFIRM = 3 };
-enum { LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2, LAB_N = 3 };
+enum { LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2, LAB_EVO = 3, LAB_N = 4 };
 enum { ALG_UNI = 0, ALG_WALK = 1 };
 enum {
     P_LAB = 0, P_TRK, P_LEN, P_SEED, P_ROOT, P_SCALE, P_ALG, P_DENS, P_PMIN, P_PMAX,
-    P_VMIN, P_VMAX, P_GATE, P_INTV, P_RPT, P_PULSES, P_ROT, P_MODE, P_OCT, P_PRESET, P_N
+    P_VMIN, P_VMAX, P_GATE, P_INTV, P_RPT, P_PULSES, P_ROT, P_MODE, P_OCT, P_PRESET,
+    P_EMODE, P_ELEN, P_EVOL, P_LOCK, P_STYLE, P_MOCT, P_MPITCH, P_MDISP, P_MVEL, P_MGATE,
+    P_MINS, P_MREM, P_MREV, P_MROT, P_MOCTV, P_MQUANT, P_MINT, P_MPROT, P_MSTEP, P_RESET, P_N
 };
 
 struct genesis_ui {
@@ -51,6 +54,12 @@ struct genesis_ui {
     void *scr;
     gen_preview prev;
     gen_event events[MAX_EV]; /* exact preview events for Apply (no silent regen) */
+    /* Evolution Lab state is appended. Earlier offsets stay put for the harness. */
+    gen_event evo_src[MAX_EV];
+    u8 evo_mode, reg_len, evolve, lockv, mstyle, moct;
+    u8 mpitch, mdisp, mvelp, mgatep, mins, mrem;
+    u8 mrev, mrot, moctv, mquant, mint, mprot, mstep;
+    gen_evo evo;
 };
 
 _Static_assert(offsetof(struct genesis_ui, len) == 8, "genesis len offset");
@@ -59,7 +68,9 @@ _Static_assert(offsetof(struct genesis_ui, page) == 33, "genesis page offset");
 _Static_assert(offsetof(struct genesis_ui, native_len) == 34, "genesis native_len offset");
 _Static_assert(offsetof(struct genesis_ui, seed) == 36, "genesis seed offset");
 
-static const char *const lab_name[LAB_N] = {"Melody", "Euclid", "Arp"};
+static const char *const lab_name[LAB_N] = {"Melody", "Euclid", "Arp", "Evo"};
+static const char *const evo_name[] = {"Turing", "Markov", "Mutate"};
+static const char *const style_name[] = {"Step", "Motif", "Bass", "Expl", "Learn"};
 static const char *const scale_name[] = {
     "Chrom", "Major", "N.min", "H.min", "M.min", "Dor", "Phr", "Lyd",
     "Mixo", "Loc", "MajP", "MinP", "Blues", "Whole"
@@ -114,6 +125,16 @@ static struct genesis_ui *state(void)
         g->preset = 0;
         g->seed = 42;
         g->track = 8;
+        g->evo_mode = GEN_EVO_TURING;
+        g->reg_len = 8;
+        g->evolve = 0;
+        g->lockv = 0;
+        g->mstyle = GEN_MARKOV_STEPWISE;
+        g->moct = 1;
+        g->mint = 2;
+        g->moctv = 2; /* octave shift 0 */
+        g->mstep = 0;
+        gen_evo_init(&g->evo);
         g->st = ST_CFG;
         g->dirty = 1;
         g->magic = GN_MAGIC;
@@ -147,6 +168,7 @@ static s32 clampi(s32 v, s32 lo, s32 hi)
 
 static void invalidate(struct genesis_ui *g)
 {
+    gen_evo_discard(&g->evo);
     g->prev.valid = 0;
     g->n_ev = 0;
     g->applied = 0;
@@ -300,6 +322,26 @@ static u8 param_max(const struct genesis_ui *g, u8 p)
     case P_MODE: return (u8)GEN_ARP_DIVERGE;
     case P_OCT: return 4;
     case P_PRESET: return 3;
+    case P_EMODE: return 2;
+    case P_ELEN: return 64;
+    case P_EVOL: return 100;
+    case P_LOCK: return 1;
+    case P_STYLE: return 4;
+    case P_MOCT: return 1;
+    case P_MPITCH:
+    case P_MDISP:
+    case P_MVEL:
+    case P_MGATE:
+    case P_MINS:
+    case P_MREM: return 100;
+    case P_MREV:
+    case P_MQUANT:
+    case P_RESET: return 1;
+    case P_MROT: return g->len ? (u8)(g->len - 1) : 0;
+    case P_MOCTV: return 4;
+    case P_MINT: return 24;
+    case P_MPROT: return 15;
+    case P_MSTEP: return 64;
     default: return 0;
     }
 }
@@ -316,6 +358,17 @@ static int param_visible(const struct genesis_ui *g, u8 p)
         return p == P_PULSES || p == P_ROT || p == P_PMIN || p == P_PMAX || p == P_DENS;
     if (g->lab == LAB_ARP)
         return p == P_MODE || p == P_OCT || p == P_PRESET;
+    if (g->lab == LAB_EVO) {
+        if (p == P_DENS || p == P_PMIN || p == P_PMAX || p == P_EMODE)
+            return g->evo_mode != GEN_EVO_MUTATE || p != P_DENS;
+        if (g->evo_mode == GEN_EVO_TURING)
+            return p == P_ELEN || p == P_EVOL || p == P_LOCK || p == P_RESET;
+        if (g->evo_mode == GEN_EVO_MARKOV)
+            return p == P_STYLE || p == P_MOCT;
+        return p == P_MPITCH || p == P_MDISP || p == P_MVEL || p == P_MGATE || p == P_MINS ||
+               p == P_MREM || p == P_MREV || p == P_MROT || p == P_MOCTV || p == P_MQUANT ||
+               p == P_MINT || p == P_MPROT || p == P_MSTEP;
+    }
     return 0;
 }
 
@@ -342,6 +395,25 @@ static u8 *param_ptr(struct genesis_ui *g, u8 p)
     case P_MODE: return &g->mode;
     case P_OCT: return &g->oct;
     case P_PRESET: return &g->preset;
+    case P_EMODE: return &g->evo_mode;
+    case P_ELEN: return &g->reg_len;
+    case P_EVOL: return &g->evolve;
+    case P_LOCK: return &g->lockv;
+    case P_STYLE: return &g->mstyle;
+    case P_MOCT: return &g->moct;
+    case P_MPITCH: return &g->mpitch;
+    case P_MDISP: return &g->mdisp;
+    case P_MVEL: return &g->mvelp;
+    case P_MGATE: return &g->mgatep;
+    case P_MINS: return &g->mins;
+    case P_MREM: return &g->mrem;
+    case P_MREV: return &g->mrev;
+    case P_MROT: return &g->mrot;
+    case P_MOCTV: return &g->moctv;
+    case P_MQUANT: return &g->mquant;
+    case P_MINT: return &g->mint;
+    case P_MPROT: return &g->mprot;
+    case P_MSTEP: return &g->mstep;
     default: return 0;
     }
 }
@@ -360,10 +432,141 @@ static void next_param(struct genesis_ui *g, s32 dir)
     g->param = p;
 }
 
+static u32 gate_ticks(const struct genesis_ui *g);
+
+static u32 evo_gate(const struct genesis_ui *g)
+{
+    u32 t = gate_ticks(g);
+    if (t < 4)
+        t = 4;
+    if (t > GEN_TPS)
+        t = GEN_TPS;
+    return t;
+}
+
+static u8 rest_of(const struct genesis_ui *g)
+{
+    return g->dens >= 100 ? 0 : (u8)(100u - g->dens);
+}
+
+static void fill_turing(const struct genesis_ui *g, gen_turing_cfg *c)
+{
+    u32 i;
+    for (i = 0; i < sizeof *c; i++)
+        ((u8 *)c)[i] = 0;
+    c->gate = evo_gate(g);
+    c->ticks_per_step = GEN_TPS;
+    c->seed = g->seed ? g->seed : 1;
+    c->root = g->root;
+    c->pitch_min = g->pmin;
+    c->pitch_max = g->pmax;
+    c->steps = g->len < 1 ? 1 : g->len;
+    c->scale = g->scale;
+    c->length = g->reg_len < 1 ? 1 : g->reg_len;
+    c->evolve_prob = g->evolve > 100 ? 100 : g->evolve;
+    c->rest_prob = rest_of(g);
+    c->velocity = g->vmin < 1 ? 1 : g->vmin;
+    c->locked = g->lockv ? 1 : 0;
+}
+
+static uint32_t evo_bind(struct genesis_ui *g)
+{
+    void *ctx = ctx_of(g);
+    uint32_t h = 2166136261u;
+    uint32_t v;
+    int i;
+    v = g->evo_mode;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->seed;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->len;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->native_len;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->track;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->root;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->scale;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->pmin;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->pmax;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->dens;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->gate;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->vmin;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->reg_len | ((uint32_t)g->evolve << 8) | ((uint32_t)g->lockv << 16);
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->mstyle | ((uint32_t)g->moct << 8);
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = pattern_now(ctx);
+    h = gen_evo_hash(h, &v, sizeof v);
+    if (!ctx || !g->valid_trk)
+        return h;
+    for (i = 0; i < (int)g->len && i < MAX_DEST; i++) {
+        gen_native_step st;
+        if (genesis_midi_read_step(ctx, g->track, i, &st) != GEN_MIDI_OK) {
+            v = 0xffffffffu;
+            h = gen_evo_hash(h, &v, sizeof v);
+            continue;
+        }
+        h = gen_evo_hash(h, &st, sizeof st);
+    }
+    return h;
+}
+
+static int read_source(struct genesis_ui *g, gen_event *ev, u32 cap, u32 *n_out)
+{
+    void *ctx = ctx_of(g);
+    u32 n = 0, i;
+    if (!ctx || !ev || !n_out)
+        return GEN_ERR_PARAM;
+    for (i = 0; i < g->len && i < MAX_EV; i++) {
+        gen_native_step st;
+        u32 ticks;
+        if (genesis_midi_read_step(ctx, g->track, (int)i, &st) != GEN_MIDI_OK)
+            return GEN_ERR_PARAM;
+        if (!st.on)
+            continue;
+        if (st.note < 0 || st.note > 127 || st.vel < 1 || st.vel > 127)
+            return GEN_ERR_PARAM;
+        if (st.dur < 1)
+            return GEN_ERR_TIMING;
+        ticks = (u32)st.dur * GEN_TPS / 60u;
+        if (!gen_native_duration_ok(ticks, GEN_TPS))
+            return GEN_ERR_TIMING;
+        if (n >= cap)
+            return GEN_ERR_CAPACITY;
+        ev[n].tick = i * GEN_TPS;
+        ev[n].note = (u8)st.note;
+        ev[n].velocity = (u8)st.vel;
+        ev[n].channel = 0;
+        ev[n]._pad = 0;
+        ev[n].duration = ticks;
+        n++;
+    }
+    *n_out = n;
+    return GEN_OK;
+}
+
 static void adjust(struct genesis_ui *g, s32 d)
 {
     u8 p = g->param, *ptr, mx;
     u16 seed;
+    if (p == P_RESET) {
+        gen_turing_cfg c;
+        fill_turing(g, &c);
+        if (gen_evo_turing_reinit(&g->evo, &c) != GEN_OK)
+            say(ctx_of(g), "Reset failed", "");
+        else
+            say(ctx_of(g), "Reset", "");
+        invalidate(g);
+        return;
+    }
     if (p == P_SEED) {
         seed = (u16)clampi((s32)g->seed + d, 0, 65535);
         if (seed != g->seed) {
@@ -376,7 +579,7 @@ static void adjust(struct genesis_ui *g, s32 d)
     if (!ptr)
         return;
     mx = param_max(g, p);
-    if (p == P_LEN)
+    if (p == P_LEN || p == P_ELEN)
         *ptr = (u8)clampi((s32)*ptr + d * 1, 1, mx < 1 ? 1 : mx);
     else if (p == P_PULSES)
         *ptr = (u8)clampi((s32)*ptr + d, 0, g->len);
@@ -394,6 +597,8 @@ static void adjust(struct genesis_ui *g, s32 d)
         g->vmin = 1;
     if (p == P_TRK || p == P_LAB || p == P_LEN)
         refresh_track(g);
+    if (p == P_EMODE)
+        gen_evo_set_mode(&g->evo, g->evo_mode);
     invalidate(g);
 }
 
@@ -433,6 +638,113 @@ static void build_arp_notes(const struct genesis_ui *g, u8 *notes, u8 *n_out)
     (void)deg;
 }
 
+static void say_evo(void *ctx, gen_status st)
+{
+    if (st == GEN_ERR_EMPTY)
+        say(ctx, "Empty source", "");
+    else if (st == GEN_ERR_UNSUPPORTED)
+        say(ctx, "Protected", "");
+    else if (st == GEN_ERR_CAPACITY)
+        say(ctx, "Too long", "");
+    else if (st == GEN_ERR_TIMING)
+        say(ctx, "Bad timing", "");
+    else if (st == GEN_ERR_PITCH)
+        say(ctx, "Bad pitch", "");
+    else if (st == GEN_ERR_MONO)
+        say(ctx, "Not mono", "");
+    else if (st == GEN_ERR_PARAM)
+        say(ctx, "Bad param", "");
+    else
+        say(ctx, "Generate failed", "");
+}
+
+static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
+{
+    gen_turing_cfg tc;
+    gen_markov_cfg mc;
+    gen_mutate_req rq;
+    gen_buf src;
+    uint32_t n = 0, bind, i;
+    gen_status st;
+    u32 gmax, gmin;
+    gen_evo_discard(&g->evo);
+    bind = evo_bind(g);
+    if (g->len < 1 || g->len > GEN_EVO_NATIVE_MAX)
+        return GEN_ERR_PARAM;
+    if (g->evo_mode == GEN_EVO_TURING) {
+        fill_turing(g, &tc);
+        return gen_evo_turing_preview(&g->evo, &tc, buf, bind);
+    }
+    if (g->evo_mode == GEN_EVO_MARKOV) {
+        if (g->mstyle == GEN_MARKOV_LEARNED) {
+            st = (gen_status)read_source(g, g->evo_src, MAX_EV, &n);
+            if (st != GEN_OK)
+                return st;
+            src.events = g->evo_src;
+            src.count = n;
+            src.capacity = MAX_EV;
+            st = gen_evo_markov_learn(&g->evo, g->scale, g->root, &src, 0);
+            if (st != GEN_OK)
+                return st;
+        }
+        for (i = 0; i < sizeof mc; i++)
+            ((u8 *)&mc)[i] = 0;
+        mc.gate = evo_gate(g);
+        mc.ticks_per_step = GEN_TPS;
+        mc.seed = g->seed ? g->seed : 1;
+        mc.root = g->root;
+        mc.pitch_min = g->pmin;
+        mc.pitch_max = g->pmax;
+        mc.initial_degree = 0;
+        mc.steps = g->len;
+        mc.scale = g->scale;
+        mc.velocity = g->vmin < 1 ? 1 : g->vmin;
+        mc.rest_prob = rest_of(g);
+        mc.octave_motion = g->moct ? 1 : 0;
+        return gen_evo_markov_preview(&g->evo, &mc, g->mstyle, buf, bind);
+    }
+    st = (gen_status)read_source(g, g->evo_src, MAX_EV, &n);
+    if (st != GEN_OK)
+        return st;
+    src.events = g->evo_src;
+    src.count = n;
+    src.capacity = MAX_EV;
+    for (i = 0; i < sizeof rq; i++)
+        ((u8 *)&rq)[i] = 0;
+    gmax = evo_gate(g);
+    gmin = gmax / 2u;
+    if (gmin < 4)
+        gmin = 4;
+    if (gmin > gmax)
+        gmin = gmax;
+    rq.ticks_per_step = GEN_TPS;
+    rq.gate_min = gmin;
+    rq.gate_max = gmax;
+    rq.seed = g->seed ? g->seed : 1;
+    rq.root = g->root;
+    rq.pitch_min = g->pmin;
+    rq.pitch_max = g->pmax;
+    rq.dest_steps = g->len;
+    rq.octave = (int8_t)((int)g->moctv - 2);
+    rq.rotate_steps = (int8_t)g->mrot;
+    rq.scale = g->scale;
+    rq.pitch_prob = g->mpitch;
+    rq.quantize = g->mquant ? 1 : 0;
+    rq.displace_prob = g->mdisp;
+    rq.insert_prob = g->mins;
+    rq.remove_prob = g->mrem;
+    rq.velocity_prob = g->mvelp;
+    rq.gate_prob = g->mgatep;
+    rq.reverse = g->mrev ? 1 : 0;
+    rq.intensity = g->mint > 24 ? 24 : g->mint;
+    rq.protect = (uint8_t)(g->mprot & 0x0f);
+    rq.vel_min = g->vmin < 1 ? 1 : g->vmin;
+    rq.vel_max = g->vmax < rq.vel_min ? rq.vel_min : g->vmax;
+    if (g->mstep >= 1 && (unsigned)(g->mstep - 1) < g->len)
+        gen_mutate_protect_step(&rq, (unsigned)(g->mstep - 1), 1);
+    return gen_evo_mutate_preview(&g->evo, &src, &rq, buf, bind);
+}
+
 static int do_generate(struct genesis_ui *g)
 {
     void *ctx = ctx_of(g);
@@ -442,7 +754,7 @@ static int do_generate(struct genesis_ui *g)
     gen_melody_cfg mc;
     gen_arp_cfg ac;
     gen_rng rng;
-    gen_status st;
+    gen_status st = GEN_ERR_PARAM;
     u8 notes[8], nn = 0;
     u32 i;
 
@@ -501,7 +813,7 @@ static int do_generate(struct genesis_ui *g)
         mc.channel = 0;
         mc.seed = g->seed;
         st = gen_melody_uniform(&mc, &rh, &buf);
-    } else {
+    } else if (g->lab == LAB_ARP) {
         build_arp_notes(g, notes, &nn);
         if (nn == 0)
             goto fail;
@@ -514,6 +826,8 @@ static int do_generate(struct genesis_ui *g)
         ac.channel = 0;
         ac.seed = g->seed;
         st = gen_arp(&ac, notes, nn, &buf);
+    } else {
+        st = generate_evo(g, &buf);
     }
     if (st != GEN_OK || gen_buf_validate(&buf, 1) != GEN_OK)
         goto fail;
@@ -543,10 +857,14 @@ static int do_generate(struct genesis_ui *g)
     say(ctx, "Preview ", lab_name[g->lab]);
     return GEN_MIDI_OK;
 fail:
+    gen_evo_discard(&g->evo);
     g->prev.valid = 0;
     g->n_ev = 0;
     g->st = ST_ERR;
-    say(ctx, "Generate failed", "");
+    if (g->lab == LAB_EVO)
+        say_evo(ctx, st);
+    else
+        say(ctx, "Generate failed", "");
     return GEN_MIDI_ERR_INTERNAL;
 }
 
@@ -587,6 +905,14 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
 
     if (!ctx)
         return GEN_MIDI_ERR_INTERNAL;
+    if (g->lab == LAB_EVO) {
+        gen_evo_set_live(&g->evo, evo_bind(g));
+        if (g->evo.phase != GEN_EVO_VALID) {
+            say(ctx, "Stale preview", "");
+            invalidate(g);
+            return GEN_MIDI_ERR_BUSY;
+        }
+    }
     if (g->recovery) {
         say(ctx, "Recovery required", "");
         return GEN_MIDI_ERR_RESTORE;
@@ -629,6 +955,15 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
         return rc;
     }
 
+    if (g->lab == LAB_EVO && gen_evo_apply_result(&g->evo, 1) != GEN_OK) {
+        say(ctx, "State not saved", "");
+        g->applied = 1;
+        g->prev.valid = 0;
+        g->n_ev = 0;
+        g->st = ST_ERR;
+        g->dirty = 1;
+        return GEN_MIDI_ERR_INTERNAL;
+    }
     n = (int)g->n_ev;
     p = msg;
     *p++ = 'A';
@@ -907,7 +1242,9 @@ static void param_label(const struct genesis_ui *g, u8 p, char *out)
 {
     static const char *const names[] = {
         "Lab", "Track", "Length", "Seed", "Root", "Scale", "Algo", "Dens", "P.min", "P.max",
-        "V.min", "V.max", "Gate%", "Intv", "Repeat", "Pulses", "Rotate", "Mode", "Oct", "Notes"
+        "V.min", "V.max", "Gate%", "Intv", "Repeat", "Pulses", "Rotate", "Mode", "Oct", "Notes",
+        "Engine", "RegLen", "Evolve", "Lock", "Style", "OctMv", "Pit%", "Rhy%", "Vel%", "GtVar",
+        "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Prot", "Step", "Reset"
     };
     const char *s = p < P_N ? names[p] : "?";
     while (*s)
@@ -964,6 +1301,54 @@ static void value_str(const struct genesis_ui *g, u8 p, char *out)
         return;
     case P_SEED:
         put_u(out, g->seed);
+        return;
+    case P_EMODE:
+        s = evo_name[g->evo_mode < 3 ? g->evo_mode : 0];
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_STYLE:
+        s = style_name[g->mstyle < 5 ? g->mstyle : 0];
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_LOCK:
+    case P_MREV:
+    case P_MQUANT:
+    case P_MOCT:
+        s = (*param_ptr((struct genesis_ui *)g, p)) ? "On" : "Off";
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_RESET:
+        s = "Now";
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_MSTEP:
+        if (g->mstep == 0) {
+            s = "None";
+            while (*s)
+                *o++ = *s++;
+            *o = 0;
+            return;
+        }
+        put_u(out, (u32)g->mstep - 1u);
+        return;
+    case P_MOCTV:
+        {
+            int sh = (int)g->moctv - 2;
+            if (sh < 0) {
+                out[0] = '-';
+                put_u(out + 1, (u32)(-sh));
+            } else {
+                put_u(out, (u32)sh);
+            }
+        }
         return;
     default:
         break;

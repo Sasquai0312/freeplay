@@ -44,6 +44,8 @@ KNOWN_CONSTANTS = {
     0x000927C0: 'Tap Tempo: 600000 (tenths of a BPM x ms per beat)',
     0x00021480: 'pages.c VU meter scale: 284 px x 480 (meter width x the -48.0 dB floor in tenths)',
     0x0007060D: 'genesis_midi_caps: mono, velocity, duration, and lengths 16/32/64',
+    0x000F4240: 'Genesis timing cap: ticks_per_step must be <= 1000000',
+    0x000186A0: 'Markov pitch search: initial distance sentinel 100000',
 }
 from ppf import PPF, diff  # noqa: E402
 

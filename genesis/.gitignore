@@ -1,6 +1,7 @@
 *.o
 tests/test_genesis
 tests/test_evolution
+tests/test_evo_session
 tools/gen_demos
 tools/gen_evolution_demos
 build/

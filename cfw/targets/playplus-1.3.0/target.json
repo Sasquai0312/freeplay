@@ -237,6 +237,11 @@
           "../../../genesis/engine/rhythm.c",
           "../../../genesis/engine/melody.c",
           "../../../genesis/engine/arpeggiator.c",
+          "../../../genesis/engine/transform.c",
+          "../../../genesis/engine/turing.c",
+          "../../../genesis/engine/markov.c",
+          "../../../genesis/engine/mutate.c",
+          "../../../genesis/engine/evolve.c",
           "../../src/genesis_adapt.c",
           "../../src/genesis_aeabi.c",
           "../../src/genesis_ui.c"
