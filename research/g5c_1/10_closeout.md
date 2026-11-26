@@ -10,7 +10,7 @@ Turing, Markov (four presets and learned mode), and Mutation are one Evolution L
 
 ## B. Git
 
-Branch `cursor/g5c1-evolution-lab-f3f4`. Parent `34dc6212bc3f8c6fca38deacca6f1e274e8f9314`. The commit hash is the commit that adds this directory. Push and pull-request status are in the phase summary next to this file.
+Branch `cursor/g5c1-evolution-lab-f3f4`. Implementation commit `4df7541e327dafe4b5ce8329730dd5e080f19d7f`. Parent `34dc6212bc3f8c6fca38deacca6f1e274e8f9314`. Push and pull-request status are in the phase summary next to this file.
 
 ## C. Frozen baseline
 
