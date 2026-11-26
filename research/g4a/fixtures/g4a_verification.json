@@ -1,0 +1,17 @@
+{
+  "decision": "READY_FOR_CONTROLLED_OWNER_HARDWARE_TEST",
+  "source_commit": "90ed2e6",
+  "candidate_sha256": "5dc172f7262d7bda29d9b250ddc09bd70265dd96321e2c35cc8eef34856c4f26",
+  "candidate_size": 4236752,
+  "stock_sha256": "535a903dffea93b9e624c7d0f613823812f7f7b1df74c91e93e3e93e8de94876",
+  "rebuild_match": true,
+  "cave_used": 13874,
+  "ext_used": 49328,
+  "static_cfw_ram_increase": 0,
+  "unexplained_changed_bytes": 0,
+  "verify_py": "FAIL three constant literals; checksums hooks emu_slice 43/43 pass",
+  "g2": "All Genesis tests passed",
+  "thumb_fields": "3/3",
+  "g3c_suites_on_this_sha": "43/43 e2e, 17/17 ui, 42/42 g3a, 23/23 screen, 38/38 slicer, 6/6 tap, 6/6 mono (G3C; not re-run in G4A)",
+  "compiler": "Ubuntu clang version 18.1.3"
+}
