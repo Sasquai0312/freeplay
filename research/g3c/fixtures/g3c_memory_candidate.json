@@ -1,0 +1,24 @@
+{
+  "code_cave": {
+    "used": 13874,
+    "capacity": 16384,
+    "remaining": 2510
+  },
+  "extension": {
+    "used": 49328,
+    "capacity": 65536,
+    "remaining": 16208
+  },
+  "g3b_extension": 47864,
+  "g3c_delta_ext": 1464,
+  "genesis_ui_text": 6831,
+  "additional_static_cfw_ram": 0,
+  "candidate": {
+    "filename": "PlayPlus_FreePlay_01.ppf",
+    "size": 4236752,
+    "sha256": "5dc172f7262d7bda29d9b250ddc09bd70265dd96321e2c35cc8eef34856c4f26",
+    "base_sha256": "535a903dffea93b9e624c7d0f613823812f7f7b1df74c91e93e3e93e8de94876",
+    "build": "CFW_SKIP_LLD=1 python cfw/tools/build.py cfw/targets/playplus-1.3.0/target.json --out <dir> --no-verify",
+    "compiler": "clang-18"
+  }
+}

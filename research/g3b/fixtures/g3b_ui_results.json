@@ -95,7 +95,7 @@
         "G3",
         "hits",
         "5",
-        "Apply unavailable"
+        "Bottom: Apply"
       ]
     },
     {
@@ -151,7 +151,7 @@
         "C4",
         "hits",
         "16",
-        "Apply unavailable"
+        "Bottom: Apply"
       ]
     },
     {
@@ -169,7 +169,7 @@
         "C4",
         "hits",
         "16",
-        "Apply unavailable"
+        "Bottom: Apply"
       ]
     },
     {
@@ -204,10 +204,10 @@
       "detail": null
     },
     {
-      "name": "Apply disabled toast",
+      "name": "Apply without preview gated",
       "pass": true,
       "detail": [
-        "Apply in G3C"
+        "Generate first"
       ]
     },
     {

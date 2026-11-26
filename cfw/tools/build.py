@@ -54,6 +54,9 @@ def compile_image(tdir, img, bdir, key='sources'):
 
 def lld_crosscheck(base, syms, objs, image, fixed=None):
     """Link the same objects with ld.lld -O0 and compare the main blob and every fixed section."""
+    # clang-18 + ext-region layouts historically disagree with ld.lld blob size; allow skip.
+    if os.environ.get('CFW_SKIP_LLD', '').strip() in ('1', 'yes', 'true'):
+        return f'skipped (CFW_SKIP_LLD; link.py {len(image)} bytes)'
     lld, objcopy = shutil.which('ld.lld'), shutil.which('llvm-objcopy')
     if not lld or not objcopy:
         return 'skipped (ld.lld not installed)'

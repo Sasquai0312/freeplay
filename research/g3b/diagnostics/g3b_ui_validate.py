@@ -108,8 +108,8 @@ def main():
     d.s.shot(os.path.join(shot_dir, '06_preview_melody.png'))
     t = d.texts()
     check('A preview shown', 'Preview' in t or 'hits' in t or get_wmode() == WMODE_GENESIS, t[:15])
-    # Back to config
-    d.s.tap(BTN_BOT, after_ms=300)  # Edit
+    # Back to config (G3C+: Bottom is Apply — use Back to drop preview without writes)
+    d.s.tap(BTN_BACK, after_ms=300)
     d.s.run_ms(150)
     # Exit Genesis
     d.s.tap(BTN_BACK, after_ms=400)
@@ -129,7 +129,7 @@ def main():
     d.s.shot(os.path.join(shot_dir, '06b_preview_euclid.png'))
     t = d.texts()
     check('B euclid preview', any('Preview' in x for x in t) and any(x == '5' for x in t), t[-16:])
-    d.s.tap(BTN_BOT, after_ms=250)
+    d.s.tap(BTN_BACK, after_ms=250)  # leave preview without Apply
     d.vp.inputs.button(10, 0)
     d.s.run_ms(50)
     d.s.turn(1, after_ms=100)
@@ -151,8 +151,8 @@ def main():
     d.s.shot(os.path.join(shot_dir, '06c_preview_arp.png'))
     t = d.texts()
     check('C arp preview', any('Preview' in x for x in t) and any(x == '16' for x in t), t[-16:])
-    # mode change: Edit, Shift+turn to Mode, turn value, regenerate
-    d.s.tap(BTN_BOT, after_ms=250)
+    # mode change: Back to config, Shift+turn to Mode, turn value, regenerate
+    d.s.tap(BTN_BACK, after_ms=250)
     for _ in range(8):
         d.vp.inputs.button(10, 0)
         d.s.run_ms(30)
@@ -204,12 +204,12 @@ def main():
         close_all()
     check('F repeated open/generate/close stable', ok_f)
 
-    # Apply disabled: open, bottom key toast
+    # Apply without preview: Bottom requires Generate first (G3C Apply is live from preview)
     open_genesis()
     d.vp.eve.cmd_log.clear()
     d.s.tap(BTN_BOT, after_ms=300)
     t = d.texts()
-    check('Apply disabled toast', any('G3C' in x or 'Apply' in x for x in t), t[:8])
+    check('Apply without preview gated', any('Generate first' in x or 'Apply' in x for x in t), t[:8])
     d.s.shot(os.path.join(shot_dir, '08_apply_disabled.png'))
     close_all()
 

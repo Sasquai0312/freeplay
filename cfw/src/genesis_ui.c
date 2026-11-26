@@ -1,5 +1,5 @@
-/* G3B: Menu > Genesis — generator config + non-destructive preview.
- * No production Apply. Mirrors LFO/Slicer panel lifecycle. */
+/* G3C: Menu > Genesis — config, preview, and production Apply (G3A adapter).
+ * Mirrors LFO/Slicer panel lifecycle. MERGE deferred. */
 #include "genesis_ui.h"
 #include "genesis_adapt.h"
 #include "slice.h"
@@ -20,12 +20,13 @@ extern void fw_toast_show(void *toast, const char *msg);
 #define REDRAW_MS 40u
 #define GEN_TPS 480u
 #define MAX_EV 64
+#define PROD_PLEN 16 /* verified destination length for production Apply */
 #define PANEL_X 0
 #define PANEL_Y 24
 #define PANEL_W 320
 #define PANEL_H 192
 
-enum { ST_CFG = 0, ST_PREV = 1, ST_ERR = 2 };
+enum { ST_CFG = 0, ST_PREV = 1, ST_ERR = 2, ST_CONFIRM = 3 };
 enum { LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2, LAB_N = 3 };
 enum { ALG_UNI = 0, ALG_WALK = 1 };
 enum {
@@ -38,11 +39,15 @@ struct genesis_ui {
     u8 st, lab, param, track, len, dens, gate;
     u8 root, scale, alg, vmin, vmax, pmin, pmax;
     u8 max_intv, rpt, pulses, rot, mode, oct, preset;
-    u8 valid_trk, dirty, lit, pad;
+    u8 valid_trk, dirty, lit, recovery;
+    u8 n_ev, applied, confirm_replace, diag_fail_at; /* diag_fail_at: harness poke only */
     u16 seed;
+    u16 dest_occ; /* bitmask of occupied steps 0..15 at preview time */
+    u32 pattern_id;
     u32 key, drawn_ms;
     void *scr;
     gen_preview prev;
+    gen_event events[MAX_EV]; /* exact preview events for Apply (no silent regen) */
 };
 
 static const char *const lab_name[LAB_N] = {"Melody", "Euclid", "Arp"};
@@ -134,9 +139,38 @@ static s32 clampi(s32 v, s32 lo, s32 hi)
 static void invalidate(struct genesis_ui *g)
 {
     g->prev.valid = 0;
-    if (g->st == ST_PREV)
+    g->n_ev = 0;
+    g->applied = 0;
+    g->confirm_replace = 0;
+    if (g->st == ST_PREV || g->st == ST_CONFIRM)
         g->st = ST_CFG;
     g->dirty = 1;
+}
+
+static u32 pattern_now(void *ctx)
+{
+    void *app, *pm;
+    if (!ctx)
+        return 0;
+    app = PTR(ctx, MENU_CTX_APP);
+    if (!cfw_ptr_ok(app))
+        return 0;
+    pm = (char *)app + APP_PATMGR;
+    return U32(pm, PM_PLAYING);
+}
+
+static u16 dest_occ_mask(void *ctx, int track, int plen)
+{
+    gen_native_step st;
+    u16 m = 0;
+    int i, lim = plen < 16 ? plen : 16;
+    for (i = 0; i < lim; i++) {
+        if (genesis_midi_read_step(ctx, track, i, &st) != GEN_MIDI_OK)
+            continue;
+        if (st.on)
+            m |= (u16)(1u << i);
+    }
+    return m;
 }
 
 static int refresh_track(struct genesis_ui *g)
@@ -157,6 +191,57 @@ static int refresh_track(struct genesis_ui *g)
         }
     }
     return 1;
+}
+
+int cfw_genesis_recovery_active(void)
+{
+    struct genesis_ui *g = peek();
+    return g && g->recovery ? 1 : 0;
+}
+
+void cfw_genesis_set_recovery(int on)
+{
+    struct genesis_ui *g = state();
+    if (!g)
+        return;
+    g->recovery = on ? 1 : 0;
+    if (on)
+        invalidate(g);
+}
+
+/* Preflight before first native write. Returns GEN_MIDI_* / OK. */
+static int preflight_apply(struct genesis_ui *g, gen_apply_policy policy)
+{
+    void *ctx = ctx_of(g);
+    int plen, i;
+    u16 occ;
+    if (!ctx)
+        return GEN_MIDI_ERR_INTERNAL;
+    if (g->recovery)
+        return GEN_MIDI_ERR_RESTORE;
+    if (!g->prev.valid || g->n_ev == 0 || g->n_ev != (u8)g->prev.event_count)
+        return GEN_MIDI_ERR_PARAM;
+    if (g->applied)
+        return GEN_MIDI_ERR_BUSY;
+    if ((int)g->track != g->prev.track)
+        return GEN_MIDI_ERR_PARAM;
+    if (genesis_midi_validate_track(ctx, g->track) != GEN_MIDI_OK)
+        return GEN_MIDI_ERR_BAD_TRACK;
+    plen = genesis_midi_pattern_length(ctx, g->track);
+    if (plen != PROD_PLEN || plen != g->prev.length)
+        return GEN_MIDI_ERR_CAPACITY;
+    if (g->len > (u8)plen)
+        return GEN_MIDI_ERR_CAPACITY;
+    if (pattern_now(ctx) != g->pattern_id)
+        return GEN_MIDI_ERR_BUSY;
+    occ = dest_occ_mask(ctx, g->track, plen);
+    if (occ != g->dest_occ)
+        return GEN_MIDI_ERR_BUSY; /* destination mutated since preview */
+    for (i = 0; i < (int)g->n_ev; i++) {
+        if (g->events[i].note > 127 || g->events[i].velocity < 1 || g->events[i].velocity > 127)
+            return GEN_MIDI_ERR_PARAM;
+    }
+    return genesis_midi_validate_events(ctx, g->track, 0, g->events, g->n_ev, GEN_TPS, policy);
 }
 
 static u8 param_max(const struct genesis_ui *g, u8 p)
@@ -403,12 +488,23 @@ static int do_generate(struct genesis_ui *g)
     if (genesis_midi_preview_build(ctx, g->track, 0, buf.events, buf.count, GEN_TPS, g->seed,
                                    (u8)(g->lab + 1), GEN_APPLY_EMPTY_ONLY, &g->prev) != GEN_MIDI_OK)
         goto fail;
+    /* Keep exact events for Apply — never silently regenerate. */
+    g->n_ev = 0;
+    for (i = 0; i < buf.count && i < MAX_EV; i++) {
+        g->events[i] = buf.events[i];
+        g->n_ev++;
+    }
+    g->pattern_id = pattern_now(ctx);
+    g->dest_occ = dest_occ_mask(ctx, g->track, g->prev.length > 0 ? g->prev.length : PROD_PLEN);
+    g->applied = 0;
+    g->confirm_replace = 0;
     g->st = ST_PREV;
     g->dirty = 1;
     say(ctx, "Preview ", lab_name[g->lab]);
     return GEN_MIDI_OK;
 fail:
     g->prev.valid = 0;
+    g->n_ev = 0;
     g->st = ST_ERR;
     say(ctx, "Generate failed", "");
     return GEN_MIDI_ERR_INTERNAL;
@@ -421,6 +517,105 @@ static void regen_seed(struct genesis_ui *g)
     if (g->seed == 0)
         g->seed = 1;
     invalidate(g);
+}
+
+static void toast_apply_err(void *ctx, int rc)
+{
+    if (rc == GEN_MIDI_ERR_OCCUPIED)
+        say(ctx, "Region occupied", "");
+    else if (rc == GEN_MIDI_ERR_RESTORE)
+        say(ctx, "Recovery required", "");
+    else if (rc == GEN_MIDI_ERR_BAD_TRACK)
+        say(ctx, "Need MIDI track", "");
+    else if (rc == GEN_MIDI_ERR_BUSY)
+        say(ctx, "Stale preview", "");
+    else if (rc == GEN_MIDI_ERR_CAPACITY)
+        say(ctx, "Need 16 steps", "");
+    else if (rc == GEN_MIDI_ERR_PARAM)
+        say(ctx, "No preview", "");
+    else
+        say(ctx, "Apply failed", "");
+}
+
+static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
+{
+    void *ctx = ctx_of(g);
+    gen_snap snap;
+    char msg[28], *p;
+    int rc, n;
+    u32 i;
+
+    if (!ctx)
+        return GEN_MIDI_ERR_INTERNAL;
+    if (g->recovery) {
+        say(ctx, "Recovery required", "");
+        return GEN_MIDI_ERR_RESTORE;
+    }
+    rc = preflight_apply(g, policy);
+    if (rc != GEN_MIDI_OK) {
+        toast_apply_err(ctx, rc);
+        if (rc == GEN_MIDI_ERR_BUSY || rc == GEN_MIDI_ERR_PARAM)
+            invalidate(g);
+        return rc;
+    }
+
+    for (i = 0; i < sizeof snap; i++)
+        ((u8 *)&snap)[i] = 0;
+    rc = genesis_midi_apply_ex(ctx, g->track, 0, g->events, g->n_ev, GEN_TPS, policy, &snap,
+                               (int)g->diag_fail_at);
+    g->diag_fail_at = 0; /* one-shot harness poke */
+
+    if (rc == GEN_MIDI_ERR_OCCUPIED && policy == GEN_APPLY_EMPTY_ONLY) {
+        /* Offer explicit REPLACE confirmation (G3A-verified restore path). */
+        g->confirm_replace = 1;
+        g->st = ST_CONFIRM;
+        g->dirty = 1;
+        say(ctx, "Replace? Apply again", "");
+        return GEN_MIDI_ERR_OCCUPIED;
+    }
+    if (rc == GEN_MIDI_ERR_RESTORE) {
+        g->recovery = 1;
+        invalidate(g);
+        g->st = ST_ERR;
+        say(ctx, "Recovery required", "");
+        return rc;
+    }
+    if (rc != GEN_MIDI_OK) {
+        toast_apply_err(ctx, rc);
+        g->confirm_replace = 0;
+        if (g->st == ST_CONFIRM)
+            g->st = ST_PREV;
+        g->dirty = 1;
+        return rc;
+    }
+
+    n = (int)g->n_ev;
+    p = msg;
+    *p++ = 'A';
+    *p++ = 'p';
+    *p++ = 'p';
+    *p++ = 'l';
+    *p++ = 'i';
+    *p++ = 'e';
+    *p++ = 'd';
+    *p++ = ' ';
+    if (n >= 10)
+        *p++ = (char)('0' + (n / 10) % 10);
+    *p++ = (char)('0' + n % 10);
+    *p++ = ' ';
+    *p++ = 't';
+    *p++ = (char)('0' + ((g->track + 1) / 10) % 10);
+    *p++ = (char)('0' + (g->track + 1) % 10);
+    *p = 0;
+    fw_toast_show((char *)PTR(PTR(ctx, MENU_CTX_CTRL), CTRL_UI) + UI_TOAST, msg);
+
+    g->applied = 1;
+    g->confirm_replace = 0;
+    g->prev.valid = 0;
+    g->n_ev = 0;
+    g->st = ST_CFG;
+    g->dirty = 1;
+    return GEN_MIDI_OK;
 }
 
 void cfw_menu_build_genesis(void *ctx, void *menu)
@@ -443,13 +638,14 @@ void cfw_genesis_enter(void *scr)
         g->param = P_LAB;
         g->prev.valid = 0;
         mask = U32((char *)PTR(ctx, MENU_CTX_CTRL) + CTRL_SEL, 0x0c) & 0xffffu;
+        g->track = 8; /* prefer verified default MIDI track */
         for (t = 0; t < NUM_TRACKS; t++)
-            if (mask & (1u << t)) {
+            if ((mask & (1u << t))) {
                 g->track = (u8)t;
-                break;
+                if (refresh_track(g))
+                    break;
+                g->track = 8;
             }
-        if (!(mask & 0xffffu))
-            g->track = 8;
         refresh_track(g);
         if (!g->valid_trk) {
             for (t = 0; t < NUM_TRACKS; t++) {
@@ -521,35 +717,56 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
     }
     if (kind == 1) { /* button */
         if (id == BTN_BACK && val == 0) {
-            if (g->st == ST_PREV) {
-                g->st = ST_CFG;
-                g->prev.valid = 0;
+            if (g->st == ST_CONFIRM) {
+                g->confirm_replace = 0;
+                g->st = ST_PREV;
                 g->dirty = 1;
+                say(ctx, "Replace cancelled", "");
+                return 1;
+            }
+            if (g->st == ST_PREV) {
+                invalidate(g);
                 return 1;
             }
             return 0; /* stock leave */
         }
         if (id == BTN_TOP && val == 0) {
+            if (g->recovery) {
+                say(ctx, "Recovery required", "");
+                return 1;
+            }
             g->lab = (u8)((g->lab + 1) % LAB_N);
             g->param = P_LAB;
-            g->st = ST_CFG;
-            g->prev.valid = 0;
             invalidate(g);
             say(ctx, lab_name[g->lab], "");
             g->dirty = 1;
             return 1;
         }
         if (id == BTN_BOT && val == 0) {
-            if (g->st == ST_PREV) {
-                g->st = ST_CFG;
+            /* Bottom = Apply when preview/confirm; Edit return only via Back. */
+            if (g->recovery) {
+                say(ctx, "Recovery required", "");
+                g->st = ST_ERR;
                 g->dirty = 1;
                 return 1;
             }
-            /* Apply placeholder — disabled */
-            say(ctx, "Apply in G3C", "");
+            if (g->st == ST_CONFIRM && g->confirm_replace) {
+                do_apply(g, GEN_APPLY_REPLACE_REGION);
+                return 1;
+            }
+            if (g->st == ST_PREV && g->prev.valid && g->n_ev) {
+                do_apply(g, GEN_APPLY_EMPTY_ONLY);
+                return 1;
+            }
+            if (g->st == ST_CFG)
+                say(ctx, "Generate first", "");
             return 1;
         }
         if (id == BTN_CLICK && val == 0) {
+            if (g->recovery) {
+                say(ctx, "Recovery required", "");
+                return 1;
+            }
             if (v->shift) {
                 regen_seed(g);
                 do_generate(g);
@@ -731,8 +948,11 @@ int cfw_genesis_render(void *w)
     text(&d, TILE_TEXT_X, 26, C_TEXT, 0, "Genesis");
     text(&d, 200, 26, g->valid_trk ? C_ACC : C_ERR, 0, g->valid_trk ? "MIDI ok" : "need MIDI");
 
-    if (g->st == ST_PREV && g->prev.valid) {
-        text(&d, TILE_TEXT_X, 48, C_DIM, 0, "Preview");
+    if (g->recovery)
+        text(&d, 180, 26, C_ERR, 0, "RECOVERY");
+
+    if ((g->st == ST_PREV || g->st == ST_CONFIRM) && g->prev.valid) {
+        text(&d, TILE_TEXT_X, 48, C_DIM, 0, g->st == ST_CONFIRM ? "Replace?" : "Preview");
         put_u(a, g->prev.event_count);
         text(&d, 120, 48, C_TEXT, 0, a);
         text(&d, 160, 48, C_DIM, 0, "seed");
@@ -761,9 +981,19 @@ int cfw_genesis_render(void *w)
         put_u(a, occupied);
         text(&d, TILE_TEXT_X, 150, C_DIM, 0, "hits");
         text(&d, 50, 150, C_TEXT, 0, a);
-        text(&d, TILE_TEXT_X, 170, C_DIM, 0, "Apply unavailable");
-        cfw_key_tile(&d, 0, "Lab", 0);
-        cfw_key_tile(&d, 1, "Edit", 1);
+        if (g->st == ST_CONFIRM) {
+            text(&d, TILE_TEXT_X, 170, C_ERR, 0, "Apply=replace  Back=cancel");
+            cfw_key_tile(&d, 0, "Lab", 0);
+            cfw_key_tile(&d, 1, "Replace", 1);
+        } else if (g->recovery) {
+            text(&d, TILE_TEXT_X, 170, C_ERR, 0, "Apply locked");
+            cfw_key_tile(&d, 0, "Lab", 0);
+            cfw_key_tile(&d, 1, "Locked", 0);
+        } else {
+            text(&d, TILE_TEXT_X, 170, C_ACC, 0, "Bottom: Apply");
+            cfw_key_tile(&d, 0, "Lab", 0);
+            cfw_key_tile(&d, 1, "Apply", 1);
+        }
     } else {
         text(&d, TILE_TEXT_X, 48, C_DIM, 0, lab_name[g->lab]);
         put_u(a, (u32)g->track + 1);
@@ -782,8 +1012,8 @@ int cfw_genesis_render(void *w)
         text(&d, TILE_TEXT_X, 158, C_DIM, 0, "Click: Generate");
         text(&d, TILE_TEXT_X, 176, C_DIM, 0, "Shift+Click: Regen");
 
-        if (g->st == ST_ERR)
-            text(&d, 200, 80, C_ERR, 0, "ERR");
+        if (g->st == ST_ERR || g->recovery)
+            text(&d, 200, 80, C_ERR, 0, g->recovery ? "LOCK" : "ERR");
 
         cfw_key_tile(&d, 0, "Lab+", 1);
         cfw_key_tile(&d, 1, "Apply", 0);

@@ -1,0 +1,14 @@
+{
+  "g3c_e2e": "43/43",
+  "g3b_ui": "17/17",
+  "g3a_integrate": "42/42",
+  "g2": "All Genesis tests passed",
+  "emu_slice": "43/43",
+  "vdev_tap": "6/6",
+  "vdev_slicer": "38/38",
+  "vdev_screen": "23/23 (Settings index 7\u21928 fix for Genesis menu)",
+  "mono": "6/6",
+  "ppf_thumb_fields": "3/3",
+  "ppf_full_test_tools": "env-limited (Play 1.6.0 missing; lld crosscheck)",
+  "decision": "GENESIS_V0_1_OFFLINE_VALIDATED_HARDWARE_BLOCKED"
+}

@@ -57,7 +57,9 @@ def main():
     import sdcard
     d = Device(a.ppf, snap)
     s, vp = d.s, d.vp
-    settings = 7 if vp.profile['name'].startswith('playplus') else 6   # File Samples LFO Matrix Synths Scales MIDI Settings; the Play has no Synths
+    # Play+: File, Samples, LFO, Matrix, Genesis, Synths, Scales, MIDI, Settings
+    # (Genesis added in G3B — Settings index moved from 7 → 8). Play has no Synths/Genesis.
+    settings = 8 if vp.profile['name'].startswith('playplus') else 6
     s.run_ms(300)
     check('default: full backlight', duty(d) == 128, str(duty(d)))
     flows.open_menu(s)

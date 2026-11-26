@@ -1,0 +1,561 @@
+{
+  "passed": true,
+  "n_pass": 43,
+  "n_total": 43,
+  "results": [
+    {
+      "name": "Genesis open",
+      "pass": true,
+      "detail": 7
+    },
+    {
+      "name": "A preview",
+      "pass": true,
+      "detail": [
+        "C4",
+        "A#4",
+        "D3",
+        "C3",
+        "C4",
+        "F3",
+        "D4",
+        "C4",
+        "F3",
+        "hits",
+        "14",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "A target track 8",
+      "pass": true,
+      "detail": [
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "C4",
+        "A#4",
+        "D3",
+        "C3",
+        "C4",
+        "F3",
+        "D4",
+        "C4",
+        "F3",
+        "hits",
+        "14",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "A apply toast",
+      "pass": true,
+      "detail": [
+        "Applied 14 t09",
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Track",
+        "9",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "A native occupancy >0",
+      "pass": true,
+      "detail": {
+        "on": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11,
+          13,
+          14,
+          15
+        ],
+        "n": 14
+      }
+    },
+    {
+      "name": "A notes in range",
+      "pass": true,
+      "detail": [
+        {
+          "on": true,
+          "note": 68,
+          "vel": 107,
+          "dur": 60
+        },
+        {
+          "on": true,
+          "note": 63,
+          "vel": 80,
+          "dur": 60
+        },
+        {
+          "on": true,
+          "note": 58,
+          "vel": 86,
+          "dur": 60
+        },
+        {
+          "on": true,
+          "note": 48,
+          "vel": 87,
+          "dur": 60
+        }
+      ]
+    },
+    {
+      "name": "A vel 1..127",
+      "pass": true,
+      "detail": [
+        107,
+        80,
+        86,
+        87
+      ]
+    },
+    {
+      "name": "A dur 0..3840",
+      "pass": true,
+      "detail": [
+        60,
+        60,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "A sample track unchanged",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "B lab Euclid",
+      "pass": true,
+      "detail": [
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Euclid",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "B preview 5 hits",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Preview",
+        "5",
+        "seed",
+        "42",
+        "trk",
+        "9",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "hits",
+        "5",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "B applied",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Euclid",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Euclid",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "B native 5 occupied",
+      "pass": true,
+      "detail": [
+        3,
+        6,
+        9,
+        12,
+        15
+      ]
+    },
+    {
+      "name": "B rotated preview",
+      "pass": true,
+      "detail": [
+        "trk",
+        "9",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "hits",
+        "5",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "C lab Arp",
+      "pass": true,
+      "detail": [
+        "Arp",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Arp",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "C applied",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Arp",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Arp",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "C arp pitches",
+      "pass": true,
+      "detail": [
+        60,
+        64,
+        67,
+        60,
+        64,
+        67,
+        60,
+        64
+      ]
+    },
+    {
+      "name": "C native edit note",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "D walk applied",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Algo",
+        "Walk",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "D has notes",
+      "pass": true,
+      "detail": [
+        68,
+        72,
+        72,
+        67,
+        70,
+        72,
+        68,
+        67
+      ]
+    },
+    {
+      "name": "E occupied -> replace prompt",
+      "pass": true,
+      "detail": [
+        "C5",
+        "C5",
+        "G4",
+        "A#4",
+        "C5",
+        "G#4",
+        "G4",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C4",
+        "A#3",
+        "D#4",
+        "hits",
+        "14",
+        "Apply=replace  Back=cancel"
+      ]
+    },
+    {
+      "name": "E cancel no mutation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "E re-prompt",
+      "pass": true,
+      "detail": [
+        "C5",
+        "G#4",
+        "G4",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C4",
+        "A#3",
+        "D#4",
+        "hits",
+        "14",
+        "Apply=replace  Back=cancel"
+      ]
+    },
+    {
+      "name": "E replace applied",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "P.max",
+        "72",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "E after replace occupied",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "F stale/no preview blocked",
+      "pass": true,
+      "detail": [
+        "Generate first"
+      ]
+    },
+    {
+      "name": "F dest change stale or replace",
+      "pass": true,
+      "detail": [
+        "Stale preview",
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "P.max",
+        "72",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "G unsupported toast",
+      "pass": true,
+      "detail": [
+        "Melody",
+        "trk",
+        "1",
+        "len",
+        "16",
+        "P.max",
+        "72",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "G generate rejected",
+      "pass": true,
+      "detail": [
+        "need MIDI",
+        "Melody",
+        "trk",
+        "1",
+        "len",
+        "16",
+        "P.max",
+        "72",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "ERR"
+      ]
+    },
+    {
+      "name": "G sample unchanged",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "H repeated stable",
+      "pass": true,
+      "detail": {
+        "rounds": 3
+      }
+    },
+    {
+      "name": "R recovery active",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "R apply blocked toast",
+      "pass": true,
+      "detail": [
+        "RECOVERY",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "P.max",
+        "92",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "LOCK"
+      ]
+    },
+    {
+      "name": "R lockout persists",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "R still blocked",
+      "pass": true,
+      "detail": [
+        "trk",
+        "9",
+        "len",
+        "16",
+        "P.max",
+        "92",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "LOCK"
+      ]
+    },
+    {
+      "name": "fail before_snap",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail after_snap",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail before_write",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail after_first",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail mid",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail before_commit",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "unchanged": true
+      }
+    },
+    {
+      "name": "fail during_restore",
+      "pass": true,
+      "detail": {
+        "rc": -11
+      }
+    },
+    {
+      "name": "EMPTY_ONLY occupied reject",
+      "pass": true,
+      "detail": {
+        "rc": -8
+      }
+    }
+  ]
+}

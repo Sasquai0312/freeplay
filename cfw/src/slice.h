@@ -32,7 +32,7 @@ struct cfw_view {
 #define WMODE_POOL 4 /* folder colours in the sample pool view (colors.c) */
 #define WMODE_LFO 5  /* Menu > LFO (lfoui.c) */
 #define WMODE_SLICER 6 /* Menu > Samples > Slice (slicer.c); WMODE_SLICE is its fallback without the ext code */
-#define WMODE_GENESIS 7 /* Menu > Genesis (genesis_ui.c) — preview only */
+#define WMODE_GENESIS 7 /* Menu > Genesis (genesis_ui.c) — preview + Apply */
 
 #define RAND_MAGIC 0x524e4431u /* "RND1": the randomizer fields below are valid */
 struct cfw_rand {
