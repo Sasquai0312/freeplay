@@ -831,11 +831,60 @@ static void test_properties(void)
     }
 }
 
+static void test_rotate_and_steps(void)
+{
+    gen_event ev[4], src[4], dst[8], keep[4];
+    gen_buf b, in, out;
+    gen_mutate_req r;
+    int i;
+    memset(ev, 0, sizeof ev);
+    for (i = 0; i < 4; i++)
+        put_note(&ev[i], (uint32_t)i, (uint8_t)(60 + i));
+    gen_buf_init(&b, ev, 4);
+    b.count = 4;
+    CHECK(gen_xform_rotate(&b, 1, 480) == GEN_OK, "rot +1");
+    for (i = 0; i < 4; i++)
+        if (ev[i].note == 60)
+            CHECK(ev[i].tick == 480, "plus shifts forward");
+    for (i = 0; i < 4; i++)
+        put_note(&ev[i], (uint32_t)i, (uint8_t)(60 + i));
+    b.count = 4;
+    CHECK(gen_xform_rotate(&b, -1, 480) == GEN_OK, "rot -1");
+    for (i = 0; i < 4; i++)
+        if (ev[i].note == 60)
+            CHECK(ev[i].tick == 1440, "minus wraps to the last step");
+    for (i = 0; i < 4; i++)
+        put_note(&ev[i], (uint32_t)i, (uint8_t)(60 + i));
+    b.count = 4;
+    CHECK(gen_xform_rotate(&b, 4, 480) == GEN_OK, "rot +4");
+    for (i = 0; i < 4; i++)
+        if (ev[i].note == 60)
+            CHECK(ev[i].tick == 0, "full cycle is identity");
+
+    for (i = 0; i < 4; i++)
+        put_note(&src[i], (uint32_t)i, (uint8_t)(60 + i));
+    memcpy(keep, src, sizeof keep);
+    in.events = src;
+    in.count = 4;
+    in.capacity = 4;
+    r = mreq(9);
+    r.dest_steps = 4;
+    r.pitch_prob = 100;
+    r.intensity = 12;
+    gen_mutate_protect_step(&r, 0, 1);
+    gen_mutate_protect_step(&r, 2, 1);
+    gen_buf_init(&out, dst, 8);
+    CHECK(gen_mutate(&in, &r, &out) == GEN_OK, "two protected steps");
+    CHECK(dst[0].note == 60 && dst[2].note == 62, "protected pitches stay");
+    CHECK(memcmp(src, keep, sizeof keep) == 0, "protect source");
+}
+
 int main(void)
 {
     test_turing();
     test_markov();
     test_mutate();
+    test_rotate_and_steps();
     test_properties();
     if (g_fail) {
         fprintf(stderr, "%d evolution checks failed\n", g_fail);

@@ -46,6 +46,13 @@ KNOWN_CONSTANTS = {
     0x0007060D: 'genesis_midi_caps: mono, velocity, duration, and lengths 16/32/64',
     0x000F4240: 'Genesis timing cap: ticks_per_step must be <= 1000000',
     0x000186A0: 'Markov pitch search: initial distance sentinel 100000',
+    # cfw_ext_ok compares the header byte count before dividing by 4.
+    # n = w[1]/4 <= CFW_EXT_MAX/4 (0x4000) iff w[1] <= 0x10003.
+    0x00010003: 'cfw_ext_ok: max extension header byte count (CFW_EXT_MAX/4 words)',
+    # pages.c VERTEX2F base split: 0x40d005b0 + 0xffa50 == DL_VERTEX2F(28*16, 0)
+    0x000FFA50: 'cfw_pages_render: EVE VERTEX2F addend for x = TILE_TEXT_X (28 px)',
+    # genesis_ui state() packs scale=2, alg=0, vmin=64, vmax=110 into one word
+    0x6E400002: 'genesis_ui defaults: natural minor, uniform, velocity 64..110',
 }
 from ppf import PPF, diff  # noqa: E402
 

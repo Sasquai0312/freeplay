@@ -1,0 +1,574 @@
+[
+  {
+    "name": "open melody",
+    "pass": true,
+    "detail": [
+      "16",
+      "pat",
+      "0",
+      "Lab",
+      "Melody",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap euclid",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Euclid",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap arp",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Arp",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap evo turing",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Evo",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap back to melody",
+    "pass": true,
+    "detail": [
+      "Melody",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "back on turing",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "focus length",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "length floor 1",
+    "pass": true,
+    "detail": 1
+  },
+  {
+    "name": "length ceiling is native",
+    "pass": true,
+    "detail": [
+      16,
+      16
+    ]
+  },
+  {
+    "name": "turing preview",
+    "pass": true,
+    "detail": [
+      "C4",
+      "D#3",
+      "A#3",
+      "reg",
+      "8",
+      "hits",
+      "8",
+      "Bottom: Apply"
+    ]
+  },
+  {
+    "name": "preview writes no notes",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "repeat preview identical",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "repeat preview writes no notes",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "back from preview stays",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "focus evolve",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "edit invalidates preview",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "focus engine",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "markov discards turing proposal",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "focus style",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "style Step",
+    "pass": true,
+    "detail": 0
+  },
+  {
+    "name": "style Motif",
+    "pass": true,
+    "detail": 1
+  },
+  {
+    "name": "style Bass",
+    "pass": true,
+    "detail": 2
+  },
+  {
+    "name": "style Expl",
+    "pass": true,
+    "detail": 3
+  },
+  {
+    "name": "style Learn",
+    "pass": true,
+    "detail": 4
+  },
+  {
+    "name": "empty learn",
+    "pass": true,
+    "detail": [
+      "pat",
+      "16",
+      "Style",
+      "Learn",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "ERR"
+    ]
+  },
+  {
+    "name": "learn error shown",
+    "pass": true,
+    "detail": [
+      "trk",
+      "9",
+      "len",
+      "16",
+      "pat",
+      "16",
+      "Style",
+      "Learn",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "ERR"
+    ]
+  },
+  {
+    "name": "learn did not publish",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "error back stays",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "preset after empty",
+    "pass": true,
+    "detail": [
+      0,
+      1,
+      [
+        "F3",
+        "hits",
+        "13",
+        "Bottom: Apply"
+      ]
+    ]
+  },
+  {
+    "name": "preset is not pending",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "mutate mode",
+    "pass": true,
+    "detail": 2
+  },
+  {
+    "name": "focus rot",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "signed rotate -1",
+    "pass": true,
+    "detail": -1
+  },
+  {
+    "name": "rotate floor",
+    "pass": true,
+    "detail": -15
+  },
+  {
+    "name": "rotate ceiling",
+    "pass": true,
+    "detail": 15
+  },
+  {
+    "name": "focus attr",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "attr pitch bit",
+    "pass": true,
+    "detail": 1
+  },
+  {
+    "name": "attr pitch+rhythm",
+    "pass": true,
+    "detail": 3
+  },
+  {
+    "name": "attr all bits",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "attr none",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "pads protect 1 and 4",
+    "pass": true,
+    "detail": [
+      18,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "pad clears step 1",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "focus clear",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "clear steps",
+    "pass": true,
+    "detail": [
+      "Now",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "reverse plus step blocked",
+    "pass": true,
+    "detail": [
+      "pat",
+      "16",
+      "Rev",
+      "On",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "ERR"
+    ]
+  },
+  {
+    "name": "full grid no displacement",
+    "pass": true,
+    "detail": [
+      "C4",
+      "C4",
+      "C4",
+      "C4",
+      "C4",
+      "hits",
+      "16",
+      "Bottom: Apply"
+    ]
+  },
+  {
+    "name": "mutation preview writes no notes",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "phrase length 1",
+    "pass": true,
+    "detail": [
+      1,
+      1,
+      [
+        "8",
+        "hits",
+        "8",
+        "Bottom: Apply"
+      ]
+    ]
+  },
+  {
+    "name": "len 128 clamped",
+    "pass": true,
+    "detail": [
+      16,
+      16
+    ]
+  },
+  {
+    "name": "len 0 becomes default or native",
+    "pass": true,
+    "detail": 16
+  },
+  {
+    "name": "native 32",
+    "pass": true,
+    "detail": [
+      32,
+      32,
+      32,
+      32,
+      [
+        "8",
+        "hits",
+        "8",
+        "Bottom: Apply"
+      ]
+    ]
+  },
+  {
+    "name": "page 32",
+    "pass": true,
+    "detail": 1
+  },
+  {
+    "name": "native 64",
+    "pass": true,
+    "detail": [
+      64,
+      64,
+      64,
+      64,
+      [
+        "8",
+        "hits",
+        "8",
+        "Bottom: Apply"
+      ]
+    ]
+  },
+  {
+    "name": "page 64",
+    "pass": true,
+    "detail": 1
+  },
+  {
+    "name": "step cursor page",
+    "pass": true,
+    "detail": [
+      16,
+      1
+    ]
+  },
+  {
+    "name": "protect step 16",
+    "pass": true,
+    "detail": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "apply once",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Evo",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "apply advanced register",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "second apply refused",
+    "pass": true,
+    "detail": [
+      "Generate first"
+    ]
+  },
+  {
+    "name": "restore failure toast",
+    "pass": true,
+    "detail": [
+      "Lab",
+      "Evo",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "LOCK"
+    ]
+  },
+  {
+    "name": "restore sets recovery",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "restore does not apply session",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "restore dropped preview",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "retry blocked",
+    "pass": true,
+    "detail": [
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "LOCK"
+    ]
+  },
+  {
+    "name": "error back keeps recovery",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "second back leaves",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "lock survives leave",
+    "pass": true,
+    "detail": [
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen",
+      "LOCK"
+    ]
+  },
+  {
+    "name": "shift back acknowledges",
+    "pass": true,
+    "detail": [
+      "Evo",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "reset toast",
+    "pass": true,
+    "detail": [
+      "Now",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "reset changes register",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "reset writes no notes",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "reset is not apply",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "lock visible",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "returned to stock",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "native length stops at 64",
+    "pass": true,
+    "detail": 64
+  },
+  {
+    "name": "native 128 unavailable",
+    "pass": true,
+    "detail": 64
+  }
+]

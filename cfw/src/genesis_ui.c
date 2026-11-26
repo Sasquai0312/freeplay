@@ -36,7 +36,8 @@ enum {
     P_LAB = 0, P_TRK, P_LEN, P_SEED, P_ROOT, P_SCALE, P_ALG, P_DENS, P_PMIN, P_PMAX,
     P_VMIN, P_VMAX, P_GATE, P_INTV, P_RPT, P_PULSES, P_ROT, P_MODE, P_OCT, P_PRESET,
     P_EMODE, P_ELEN, P_EVOL, P_LOCK, P_STYLE, P_MOCT, P_MPITCH, P_MDISP, P_MVEL, P_MGATE,
-    P_MINS, P_MREM, P_MREV, P_MROT, P_MOCTV, P_MQUANT, P_MINT, P_MPROT, P_MSTEP, P_RESET, P_N
+    P_MINS, P_MREM, P_MREV, P_MROT, P_MOCTV, P_MQUANT, P_MINT, P_MPROT, P_MSTEP, P_MCLEAR,
+    P_RESET, P_N
 };
 
 struct genesis_ui {
@@ -59,6 +60,8 @@ struct genesis_ui {
     u8 evo_mode, reg_len, evolve, lockv, mstyle, moct;
     u8 mpitch, mdisp, mvelp, mgatep, mins, mrem;
     u8 mrev, mrot, moctv, mquant, mint, mprot, mstep;
+    u8 pstep[8]; /* bits 0..63: protected native steps */
+    u8 src_n;
     gen_evo evo;
 };
 
@@ -83,6 +86,38 @@ static const char *const arp_mode_name[] = {
 };
 static const char *const preset_name[] = {"Maj3", "Min3", "7th", "Scale"};
 static const u8 led_on[3] = {0x00, 0x40, 0xc0}, led_off[3] = {0, 0, 0};
+
+static int step_prot(const struct genesis_ui *g, unsigned step)
+{
+    if (step >= 64)
+        return 0;
+    return (g->pstep[step >> 3] >> (step & 7u)) & 1;
+}
+
+static void step_prot_set(struct genesis_ui *g, unsigned step, int on)
+{
+    u8 bit;
+    if (step >= 64)
+        return;
+    bit = (u8)(1u << (step & 7u));
+    if (on)
+        g->pstep[step >> 3] |= bit;
+    else
+        g->pstep[step >> 3] &= (u8)~bit;
+}
+
+static void clamp_rot(struct genesis_ui *g)
+{
+    int lim = g->len > 1 ? (int)g->len - 1 : 0;
+    int cur = (int)(int8_t)g->mrot;
+    if (cur > lim)
+        cur = lim;
+    if (cur < -lim)
+        cur = -lim;
+    g->mrot = (u8)(int8_t)cur;
+    if (g->len && g->mstep >= g->len)
+        g->mstep = (u8)(g->len - 1);
+}
 
 static struct genesis_ui *peek(void)
 {
@@ -337,11 +372,12 @@ static u8 param_max(const struct genesis_ui *g, u8 p)
     case P_MREV:
     case P_MQUANT:
     case P_RESET: return 1;
-    case P_MROT: return g->len ? (u8)(g->len - 1) : 0;
+    case P_MROT: return g->len > 1 ? (u8)(g->len - 1) : 0;
     case P_MOCTV: return 4;
     case P_MINT: return 24;
     case P_MPROT: return 15;
-    case P_MSTEP: return 64;
+    case P_MSTEP: return g->len ? (u8)(g->len - 1) : 0;
+    case P_MCLEAR: return 1;
     default: return 0;
     }
 }
@@ -367,7 +403,7 @@ static int param_visible(const struct genesis_ui *g, u8 p)
             return p == P_STYLE || p == P_MOCT;
         return p == P_MPITCH || p == P_MDISP || p == P_MVEL || p == P_MGATE || p == P_MINS ||
                p == P_MREM || p == P_MREV || p == P_MROT || p == P_MOCTV || p == P_MQUANT ||
-               p == P_MINT || p == P_MPROT || p == P_MSTEP;
+               p == P_MINT || p == P_MPROT || p == P_MSTEP || p == P_MCLEAR;
     }
     return 0;
 }
@@ -503,6 +539,15 @@ static uint32_t evo_bind(struct genesis_ui *g)
     h = gen_evo_hash(h, &v, sizeof v);
     v = g->mstyle | ((uint32_t)g->moct << 8);
     h = gen_evo_hash(h, &v, sizeof v);
+    v = (uint32_t)(int8_t)g->mrot;
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->mprot | ((uint32_t)g->mrev << 8) | ((uint32_t)g->mquant << 16) | ((uint32_t)g->moctv << 24);
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->mpitch | ((uint32_t)g->mdisp << 8) | ((uint32_t)g->mvelp << 16) | ((uint32_t)g->mgatep << 24);
+    h = gen_evo_hash(h, &v, sizeof v);
+    v = g->mins | ((uint32_t)g->mrem << 8) | ((uint32_t)g->mint << 16);
+    h = gen_evo_hash(h, &v, sizeof v);
+    h = gen_evo_hash(h, g->pstep, sizeof g->pstep);
     v = pattern_now(ctx);
     h = gen_evo_hash(h, &v, sizeof v);
     if (!ctx || !g->valid_trk)
@@ -559,12 +604,41 @@ static void adjust(struct genesis_ui *g, s32 d)
     u16 seed;
     if (p == P_RESET) {
         gen_turing_cfg c;
+        /* Writes the committed register now. Does not write native notes. */
         fill_turing(g, &c);
         if (gen_evo_turing_reinit(&g->evo, &c) != GEN_OK)
             say(ctx_of(g), "Reset failed", "");
         else
-            say(ctx_of(g), "Reset", "");
+            say(ctx_of(g), "Register reset", "");
         invalidate(g);
+        return;
+    }
+    if (p == P_MCLEAR) {
+        u32 i;
+        for (i = 0; i < sizeof g->pstep; i++)
+            g->pstep[i] = 0;
+        say(ctx_of(g), "Steps clear", "");
+        invalidate(g);
+        return;
+    }
+    if (p == P_MROT) {
+        int lim = g->len > 1 ? (int)g->len - 1 : 0;
+        int cur = (int)(int8_t)g->mrot + d;
+        if (cur > lim)
+            cur = lim;
+        if (cur < -lim)
+            cur = -lim;
+        g->mrot = (u8)(int8_t)cur;
+        invalidate(g);
+        return;
+    }
+    if (p == P_MSTEP) {
+        int lim = g->len ? (int)g->len - 1 : 0;
+        u8 pg;
+        g->mstep = (u8)clampi((int)g->mstep + d, 0, lim);
+        pg = (u8)(g->mstep / PAGE_STEPS);
+        invalidate(g);
+        g->page = pg;
         return;
     }
     if (p == P_SEED) {
@@ -575,6 +649,8 @@ static void adjust(struct genesis_ui *g, s32 d)
         }
         return;
     }
+    if (p == P_LEN)
+        refresh_track(g);
     ptr = param_ptr(g, p);
     if (!ptr)
         return;
@@ -595,6 +671,8 @@ static void adjust(struct genesis_ui *g, s32 d)
         g->vmin = g->vmax;
     if (p == P_VMIN && g->vmin < 1)
         g->vmin = 1;
+    if (p == P_LEN)
+        clamp_rot(g);
     if (p == P_TRK || p == P_LAB || p == P_LEN)
         refresh_track(g);
     if (p == P_EMODE)
@@ -641,9 +719,9 @@ static void build_arp_notes(const struct genesis_ui *g, u8 *notes, u8 *n_out)
 static void say_evo(void *ctx, gen_status st)
 {
     if (st == GEN_ERR_EMPTY)
-        say(ctx, "Empty source", "");
+        say(ctx, "No source notes", "");
     else if (st == GEN_ERR_UNSUPPORTED)
-        say(ctx, "Protected", "");
+        say(ctx, "Rev/rot blocked", "");
     else if (st == GEN_ERR_CAPACITY)
         say(ctx, "Too long", "");
     else if (st == GEN_ERR_TIMING)
@@ -668,6 +746,7 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     gen_status st;
     u32 gmax, gmin;
     gen_evo_discard(&g->evo);
+    g->src_n = 0;
     bind = evo_bind(g);
     if (g->len < 1 || g->len > GEN_EVO_NATIVE_MAX)
         return GEN_ERR_PARAM;
@@ -706,6 +785,7 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     st = (gen_status)read_source(g, g->evo_src, MAX_EV, &n);
     if (st != GEN_OK)
         return st;
+    g->src_n = (u8)n;
     src.events = g->evo_src;
     src.count = n;
     src.capacity = MAX_EV;
@@ -726,6 +806,7 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     rq.pitch_max = g->pmax;
     rq.dest_steps = g->len;
     rq.octave = (int8_t)((int)g->moctv - 2);
+    clamp_rot(g);
     rq.rotate_steps = (int8_t)g->mrot;
     rq.scale = g->scale;
     rq.pitch_prob = g->mpitch;
@@ -740,8 +821,10 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     rq.protect = (uint8_t)(g->mprot & 0x0f);
     rq.vel_min = g->vmin < 1 ? 1 : g->vmin;
     rq.vel_max = g->vmax < rq.vel_min ? rq.vel_min : g->vmax;
-    if (g->mstep >= 1 && (unsigned)(g->mstep - 1) < g->len)
-        gen_mutate_protect_step(&rq, (unsigned)(g->mstep - 1), 1);
+    for (i = 0; i < g->len && i < 64u; i++) {
+        if (step_prot(g, i))
+            gen_mutate_protect_step(&rq, i, 1);
+    }
     return gen_evo_mutate_preview(&g->evo, &src, &rq, buf, bind);
 }
 
@@ -854,6 +937,19 @@ static int do_generate(struct genesis_ui *g)
     g->confirm_replace = 0;
     g->st = ST_PREV;
     g->dirty = 1;
+    if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && g->n_ev == g->src_n && g->src_n) {
+        u32 same = 1;
+        for (i = 0; i < g->n_ev; i++) {
+            if (g->events[i].tick != g->evo_src[i].tick || g->events[i].note != g->evo_src[i].note ||
+                g->events[i].velocity != g->evo_src[i].velocity ||
+                g->events[i].duration != g->evo_src[i].duration)
+                same = 0;
+        }
+        if (same) {
+            say(ctx, "No note change", "");
+            return GEN_MIDI_OK;
+        }
+    }
     say(ctx, "Preview ", lab_name[g->lab]);
     return GEN_MIDI_OK;
 fail:
@@ -940,10 +1036,13 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
         return GEN_MIDI_ERR_OCCUPIED;
     }
     if (rc == GEN_MIDI_ERR_RESTORE) {
+        /* The writer may already have committed. Do not advance Evolution state.
+         * invalidate drops the preview and the pending learn. recovery blocks
+         * another Apply until Shift+Back re-reads the track. */
         g->recovery = 1;
         invalidate(g);
         g->st = ST_ERR;
-        say(ctx, "Recovery required", "");
+        say(ctx, "Pattern may differ", "");
         return rc;
     }
     if (rc != GEN_MIDI_OK) {
@@ -1074,9 +1173,9 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
     if (kind == 0) { /* pad */
         col = id % LED_COLS;
         row = id / LED_COLS;
+        mode = PTR(PTR(ctx, MENU_CTX_CTRL), CTRL_MODE);
+        track = row + (cfw_ptr_ok(mode) && U8(mode, MODE_BANK) ? 8u : 0u);
         if (col == SELECT_COL && val == 0) {
-            mode = PTR(PTR(ctx, MENU_CTX_CTRL), CTRL_MODE);
-            track = row + (cfw_ptr_ok(mode) && U8(mode, MODE_BANK) ? 8u : 0u);
             if (track < NUM_TRACKS) {
                 g->track = (u8)track;
                 invalidate(g);
@@ -1088,15 +1187,46 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
             }
             return 1;
         }
+        /* Step pads are swallowed while Genesis is open. On Mutation config they
+         * toggle protection for the current 16-step page. Select column stays track select. */
+        if (col < PAD_COLS && val == 0 && !g->recovery && g->st == ST_CFG &&
+            g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && track == g->track) {
+            u32 step = (u32)g->page * PAGE_STEPS + col;
+            u8 pg = g->page;
+            if (step < g->len) {
+                step_prot_set(g, step, !step_prot(g, step));
+                invalidate(g);
+                g->page = pg;
+            }
+            g->dirty = 1;
+        }
         return 1; /* swallow pads while open */
     }
     if (kind == 1) { /* button */
         if (id == BTN_BACK && val == 0) {
+            if (g->recovery && v->shift) {
+                if (!refresh_track(g))
+                    say(ctx, "Need MIDI track", "");
+                else {
+                    g->recovery = 0;
+                    invalidate(g);
+                    g->st = ST_CFG;
+                    say(ctx, "Check pattern", "");
+                }
+                g->dirty = 1;
+                return 1;
+            }
             if (g->st == ST_CONFIRM) {
                 g->confirm_replace = 0;
                 g->st = ST_PREV;
                 g->dirty = 1;
                 say(ctx, "Replace cancelled", "");
+                return 1;
+            }
+            if (g->st == ST_ERR) {
+                invalidate(g);
+                g->st = ST_CFG;
+                g->dirty = 1;
                 return 1;
             }
             if (g->st == ST_PREV) {
@@ -1155,7 +1285,14 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
     }
     if (kind == 4 && (g->st == ST_PREV || g->st == ST_CONFIRM)) {
         s32 d = (s32)val;
-        int pages = (int)((g->len + PAGE_STEPS - 1) / PAGE_STEPS);
+        int pages;
+        if (v->shift) {
+            next_param(g, d > 0 ? 1 : -1);
+            invalidate(g);
+            g->dirty = 1;
+            return 1;
+        }
+        pages = (int)((g->len + PAGE_STEPS - 1) / PAGE_STEPS);
         if (pages < 1)
             pages = 1;
         if (d > 0 && (int)g->page + 1 < pages)
@@ -1205,6 +1342,13 @@ const u8 *cfw_genesis_led(u32 led)
             return led_on;
         return led_off;
     }
+    if (col < PAD_COLS && track == g->track && g->st == ST_CFG &&
+        g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE) {
+        step = (u32)g->page * PAGE_STEPS + col;
+        if (step < g->len && step_prot(g, step))
+            return led_on;
+        return led_off;
+    }
     return 0;
 }
 
@@ -1244,7 +1388,7 @@ static void param_label(const struct genesis_ui *g, u8 p, char *out)
         "Lab", "Track", "Length", "Seed", "Root", "Scale", "Algo", "Dens", "P.min", "P.max",
         "V.min", "V.max", "Gate%", "Intv", "Repeat", "Pulses", "Rotate", "Mode", "Oct", "Notes",
         "Engine", "RegLen", "Evolve", "Lock", "Style", "OctMv", "Pit%", "Rhy%", "Vel%", "GtVar",
-        "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Prot", "Step", "Reset"
+        "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Attr", "Step", "Clr", "Reset"
     };
     const char *s = p < P_N ? names[p] : "?";
     while (*s)
@@ -1324,21 +1468,51 @@ static void value_str(const struct genesis_ui *g, u8 p, char *out)
         *o = 0;
         return;
     case P_RESET:
+    case P_MCLEAR:
         s = "Now";
         while (*s)
             *o++ = *s++;
         *o = 0;
         return;
     case P_MSTEP:
-        if (g->mstep == 0) {
+        put_u(out, g->mstep);
+        if (step_prot(g, g->mstep)) {
+            while (*o)
+                o++;
+            *o++ = ' ';
+            *o++ = 'P';
+            *o = 0;
+        }
+        return;
+    case P_MROT: {
+        int cur = (int)(int8_t)g->mrot;
+        if (cur < 0) {
+            out[0] = '-';
+            put_u(out + 1, (u32)(-cur));
+        } else {
+            put_u(out, (u32)cur);
+        }
+        return;
+    }
+    case P_MPROT: {
+        static const char bits[] = {'P', 'R', 'V', 'D'};
+        int k, any = 0;
+        for (k = 0; k < 4; k++) {
+            if (g->mprot & (1u << k)) {
+                if (any)
+                    *o++ = '+';
+                *o++ = bits[k];
+                any = 1;
+            }
+        }
+        if (!any) {
             s = "None";
             while (*s)
                 *o++ = *s++;
-            *o = 0;
-            return;
         }
-        put_u(out, (u32)g->mstep - 1u);
+        *o = 0;
         return;
+    }
     case P_MOCTV:
         {
             int sh = (int)g->moctv - 2;
@@ -1358,6 +1532,19 @@ static void value_str(const struct genesis_ui *g, u8 p, char *out)
         put_u(out, (u32)v + 1);
     else
         put_u(out, v);
+}
+
+static const char *learn_line(const struct genesis_ui *g)
+{
+    if (g->mstyle != GEN_MARKOV_LEARNED)
+        return style_name[g->mstyle < 5 ? g->mstyle : 0];
+    if (g->evo.pending_ok)
+        return "Pending";
+    if (g->evo.last_status != GEN_OK)
+        return "Error";
+    if (g->evo.model_ready && g->evo.model.style == GEN_MARKOV_LEARNED)
+        return "Learned";
+    return "No model";
 }
 
 int cfw_genesis_render(void *w)
@@ -1386,10 +1573,19 @@ int cfw_genesis_render(void *w)
     text(&d, 200, 26, g->valid_trk ? C_ACC : C_ERR, 0, g->valid_trk ? "MIDI ok" : "need MIDI");
 
     if (g->recovery)
-        text(&d, 180, 26, C_ERR, 0, "RECOVERY");
+        text(&d, 180, 26, C_ERR, 0, "MAY DIFFER");
 
     if ((g->st == ST_PREV || g->st == ST_CONFIRM) && g->prev.valid) {
-        text(&d, TILE_TEXT_X, 48, C_DIM, 0, g->st == ST_CONFIRM ? "Replace?" : "Preview");
+        const char *title = "Preview";
+        if (g->st == ST_CONFIRM)
+            title = "Replace?";
+        else if (g->lab == LAB_EVO)
+            title = evo_name[g->evo_mode < 3 ? g->evo_mode : 0];
+        text(&d, TILE_TEXT_X, 48, C_DIM, 0, title);
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING && g->lockv)
+            text(&d, 250, 48, C_ERR, 0, "LOCK");
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MARKOV)
+            text(&d, 250, 66, C_ACC, 0, learn_line(g));
         put_u(a, g->prev.event_count);
         text(&d, 120, 48, C_TEXT, 0, a);
         text(&d, 160, 48, C_DIM, 0, "seed");
@@ -1431,6 +1627,13 @@ int cfw_genesis_render(void *w)
                 dl(&d, DL_VERTEX2F(x * SUB, 90 * SUB));
                 dl(&d, DL_VERTEX2F((x + 12) * SUB, 118 * SUB));
                 dl(&d, DL_END);
+                if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && step_prot(g, i)) {
+                    dl(&d, DL_COLOR_RGB(C_ACC));
+                    dl(&d, DL_BEGIN(PRIM_RECTS));
+                    dl(&d, DL_VERTEX2F(x * SUB, 86 * SUB));
+                    dl(&d, DL_VERTEX2F((x + 12) * SUB, 90 * SUB));
+                    dl(&d, DL_END);
+                }
                 if (g->prev.occupancy[i]) {
                     fmt_note(a, g->prev.notes[i]);
                     text_f(&d, (int)(x + 6), 122, FONT_SMALL, C_DIM, OPT_CENTERX, a);
@@ -1438,6 +1641,23 @@ int cfw_genesis_render(void *w)
             }
         }
         put_u(a, occupied);
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING && g->evo.committed.ready) {
+            int rk, rbase = (int)g->page * PAGE_STEPS;
+            text(&d, 70, 48, C_DIM, 0, "reg");
+            put_u(a, g->evo.committed.length);
+            text(&d, 96, 48, C_TEXT, 0, a);
+            for (rk = 0; rk < PAGE_STEPS; rk++) {
+                int ri = rbase + rk;
+                if (ri >= g->evo.committed.length)
+                    break;
+                x = TILE_TEXT_X + (u32)rk * 14;
+                dl(&d, DL_COLOR_RGB(g->evo.committed.cells[ri] ? C_ACC : C_STEP));
+                dl(&d, DL_BEGIN(PRIM_RECTS));
+                dl(&d, DL_VERTEX2F(x * SUB, 78 * SUB));
+                dl(&d, DL_VERTEX2F((x + 10) * SUB, 84 * SUB));
+                dl(&d, DL_END);
+            }
+        }
         text(&d, TILE_TEXT_X, 150, C_DIM, 0, "hits");
         text(&d, 50, 150, C_TEXT, 0, a);
         if (g->st == ST_CONFIRM) {
@@ -1454,7 +1674,34 @@ int cfw_genesis_render(void *w)
             cfw_key_tile(&d, 1, "Apply", 1);
         }
     } else {
-        text(&d, TILE_TEXT_X, 48, C_DIM, 0, lab_name[g->lab]);
+        text(&d, TILE_TEXT_X, 48, C_DIM, 0,
+             g->lab == LAB_EVO ? evo_name[g->evo_mode < 3 ? g->evo_mode : 0] : lab_name[g->lab]);
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING) {
+            text(&d, TILE_TEXT_X, 66, C_DIM, 0, "reg");
+            put_u(a, g->reg_len);
+            text(&d, 58, 66, C_TEXT, 0, a);
+            if (g->lockv)
+                text(&d, 90, 66, C_ERR, 0, "LOCK");
+        }
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MARKOV)
+            text(&d, TILE_TEXT_X, 66, C_ACC, 0, learn_line(g));
+        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE) {
+            int k, base = (int)g->page * PAGE_STEPS;
+            for (k = 0; k < PAGE_STEPS; k++) {
+                int si = base + k;
+                u32 colr = C_STEP;
+                if (si < (int)g->len && step_prot(g, (unsigned)si))
+                    colr = C_ACC;
+                if (si == (int)g->mstep)
+                    colr = C_TEXT;
+                x = TILE_TEXT_X + (u32)k * 14;
+                dl(&d, DL_COLOR_RGB(colr));
+                dl(&d, DL_BEGIN(PRIM_RECTS));
+                dl(&d, DL_VERTEX2F(x * SUB, 188 * SUB));
+                dl(&d, DL_VERTEX2F((x + 10) * SUB, 196 * SUB));
+                dl(&d, DL_END);
+            }
+        }
         put_u(a, (u32)g->track + 1);
         text(&d, 120, 48, C_DIM, 0, "trk");
         text(&d, 150, 48, C_TEXT, 0, a);
