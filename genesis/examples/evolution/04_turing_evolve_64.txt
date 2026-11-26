@@ -1,0 +1,73 @@
+generator: turing
+seed: 44
+root: 60
+scale: dorian
+length_steps: 64
+ticks_per_step: 480
+tempo_bpm: 120
+settings: register 32, evolve 55, rest 12, lock 0, gate 360
+event_count: 60
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: 172bd5b3
+events:
+  tick=480 note=63 vel=100 dur=360 ch=0
+  tick=960 note=79 vel=100 dur=360 ch=0
+  tick=1440 note=55 vel=100 dur=360 ch=0
+  tick=1920 note=50 vel=100 dur=360 ch=0
+  tick=2400 note=62 vel=100 dur=360 ch=0
+  tick=2880 note=72 vel=100 dur=360 ch=0
+  tick=3360 note=77 vel=100 dur=360 ch=0
+  tick=4320 note=65 vel=100 dur=360 ch=0
+  tick=4800 note=69 vel=100 dur=360 ch=0
+  tick=5280 note=72 vel=100 dur=360 ch=0
+  tick=5760 note=70 vel=100 dur=360 ch=0
+  tick=6240 note=81 vel=100 dur=360 ch=0
+  tick=6720 note=62 vel=100 dur=360 ch=0
+  tick=7200 note=79 vel=100 dur=360 ch=0
+  tick=7680 note=70 vel=100 dur=360 ch=0
+  tick=8160 note=67 vel=100 dur=360 ch=0
+  tick=8640 note=51 vel=100 dur=360 ch=0
+  tick=9120 note=48 vel=100 dur=360 ch=0
+  tick=9600 note=55 vel=100 dur=360 ch=0
+  tick=10080 note=65 vel=100 dur=360 ch=0
+  tick=10560 note=65 vel=100 dur=360 ch=0
+  tick=11040 note=60 vel=100 dur=360 ch=0
+  tick=11520 note=70 vel=100 dur=360 ch=0
+  tick=12000 note=48 vel=100 dur=360 ch=0
+  tick=12480 note=63 vel=100 dur=360 ch=0
+  tick=12960 note=65 vel=100 dur=360 ch=0
+  tick=13440 note=58 vel=100 dur=360 ch=0
+  tick=13920 note=55 vel=100 dur=360 ch=0
+  tick=14400 note=63 vel=100 dur=360 ch=0
+  tick=14880 note=75 vel=100 dur=360 ch=0
+  tick=15360 note=55 vel=100 dur=360 ch=0
+  tick=15840 note=55 vel=100 dur=360 ch=0
+  tick=16320 note=79 vel=100 dur=360 ch=0
+  tick=16800 note=55 vel=100 dur=360 ch=0
+  tick=17280 note=50 vel=100 dur=360 ch=0
+  tick=17760 note=62 vel=100 dur=360 ch=0
+  tick=18240 note=79 vel=100 dur=360 ch=0
+  tick=18720 note=77 vel=100 dur=360 ch=0
+  tick=19680 note=65 vel=100 dur=360 ch=0
+  tick=20160 note=69 vel=100 dur=360 ch=0
+  tick=20640 note=72 vel=100 dur=360 ch=0
+  tick=21120 note=74 vel=100 dur=360 ch=0
+  tick=22080 note=62 vel=100 dur=360 ch=0
+  tick=22560 note=79 vel=100 dur=360 ch=0
+  tick=23040 note=70 vel=100 dur=360 ch=0
+  tick=23520 note=48 vel=100 dur=360 ch=0
+  tick=24000 note=72 vel=100 dur=360 ch=0
+  tick=24480 note=60 vel=100 dur=360 ch=0
+  tick=24960 note=55 vel=100 dur=360 ch=0
+  tick=25440 note=50 vel=100 dur=360 ch=0
+  tick=25920 note=65 vel=100 dur=360 ch=0
+  tick=26400 note=60 vel=100 dur=360 ch=0
+  tick=26880 note=72 vel=100 dur=360 ch=0
+  tick=27360 note=72 vel=100 dur=360 ch=0
+  tick=27840 note=63 vel=100 dur=360 ch=0
+  tick=28320 note=50 vel=100 dur=360 ch=0
+  tick=28800 note=62 vel=100 dur=360 ch=0
+  tick=29280 note=63 vel=100 dur=360 ch=0
+  tick=29760 note=63 vel=100 dur=360 ch=0
+  tick=30240 note=60 vel=100 dur=360 ch=0

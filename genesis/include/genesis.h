@@ -219,6 +219,173 @@ gen_status gen_xform_mutate_pitch(gen_buf *b, gen_scale scale, int root, int lo,
 gen_status gen_xform_gate(gen_buf *b, int pct_min, int pct_max, gen_rng *rng); /* scale durations */
 gen_status gen_xform_remove(gen_buf *b, uint8_t prob, gen_rng *rng);
 
+/* ---- native-compatible timing --------------------------------------------- */
+/* Verified adapter contract: native_dur = round(ticks * 60 / ticks_per_step),
+ * clamped by the device to 1..3840. Native Apply is monophonic, so a
+ * native-compatible duration also stays inside one step (1..ticks_per_step). */
+#define GEN_NATIVE_DUR_MAX 3840u
+
+static inline int gen_native_duration(uint32_t ticks, uint32_t ticks_per_step)
+{
+    if (ticks_per_step == 0 || ticks == 0 || ticks > ticks_per_step)
+        return 0;
+    return (int)((ticks * 60u + ticks_per_step / 2u) / ticks_per_step);
+}
+
+static inline int gen_native_duration_ok(uint32_t ticks, uint32_t ticks_per_step)
+{
+    int n = gen_native_duration(ticks, ticks_per_step);
+    return n >= 1 && (uint32_t)n <= GEN_NATIVE_DUR_MAX;
+}
+
+/* ---- Turing register ------------------------------------------------------- */
+/* Looping shift-register phrase. Not a clone of any commercial module.
+ * Each cell is a MIDI note 0..127 or GEN_TURING_REST. Rests live in the
+ * register, so a locked or 0% pattern repeats pitch and rest together.
+ * State is caller-owned. Generate reads `src` and writes the proposed next
+ * state to `next` without modifying `src`. */
+#define GEN_TURING_MAX_LEN   64
+#define GEN_TURING_MAX_STEPS 128
+#define GEN_TURING_REST      0xFFu
+
+typedef struct gen_turing_cfg {
+    uint32_t gate;
+    uint32_t ticks_per_step;
+    uint32_t seed;
+    int16_t  root;
+    int16_t  pitch_min;
+    int16_t  pitch_max;
+    uint16_t steps;          /* 1..128 phrase length */
+    uint8_t  scale;
+    uint8_t  length;         /* 1..64 register length */
+    uint8_t  evolve_prob;    /* 0..100; 0 repeats, 100 redraws every advance */
+    uint8_t  rest_prob;      /* 0..100, used only when a cell is written */
+    uint8_t  velocity;
+    uint8_t  locked;         /* nonzero: advance playback, do not rewrite cells */
+    uint8_t  channel;
+    uint8_t  _pad;
+} gen_turing_cfg;
+
+typedef struct gen_turing {
+    gen_turing_cfg cfg;
+    gen_rng  rng;
+    uint8_t  cells[GEN_TURING_MAX_LEN];
+    uint8_t  length;
+    uint8_t  pos;
+    uint8_t  ready;
+    uint8_t  _pad;
+} gen_turing;
+
+gen_status gen_turing_init(gen_turing *st, const gen_turing_cfg *cfg);
+gen_status gen_turing_seed(gen_turing *st, uint32_t seed);
+gen_status gen_turing_reset(gen_turing *st);
+gen_status gen_turing_copy(gen_turing *dst, const gen_turing *src);
+/* `cfg` NULL uses the configuration stored in `src`. Playback fields in a
+ * non-NULL cfg override this call only and are not stored. Register length
+ * always comes from `src`. `next` receives the advanced state. */
+gen_status gen_turing_generate(const gen_turing *src, const gen_turing_cfg *cfg,
+                               gen_buf *out, gen_turing *next);
+
+/* ---- Markov melody --------------------------------------------------------- */
+/* First-order chain on scale degrees (at most 12), not a MIDI-note matrix.
+ * Preset styles are designed heuristics, not weights learned from a corpus.
+ * A learned model is a separate caller-owned object. Generate does not
+ * modify the model. */
+#define GEN_MARKOV_MAX_DEG 12
+#define GEN_MARKOV_STEPWISE 0u
+#define GEN_MARKOV_MOTIF 1u
+#define GEN_MARKOV_BASSLINE 2u
+#define GEN_MARKOV_EXPLORATORY 3u
+#define GEN_MARKOV_LEARNED 4u
+
+typedef struct gen_markov_model {
+    uint16_t w[GEN_MARKOV_MAX_DEG][GEN_MARKOV_MAX_DEG];
+    uint8_t  n_deg;
+    uint8_t  style;
+    uint8_t  ready;
+    uint8_t  origin; /* degree used when cfg.initial_degree < 0 for a learned model */
+} gen_markov_model;
+
+typedef struct gen_markov_cfg {
+    uint32_t gate;
+    uint32_t ticks_per_step;
+    uint32_t seed;
+    int16_t  root;
+    int16_t  pitch_min;
+    int16_t  pitch_max;
+    int16_t  initial_degree; /* -1: preset draws, learned uses model->origin */
+    uint16_t steps;
+    uint8_t  scale;
+    uint8_t  velocity;
+    uint8_t  rest_prob;
+    uint8_t  octave_motion; /* 0: prefer the current octave, then fall back */
+    uint8_t  channel;
+    uint8_t  _pad[3];
+} gen_markov_cfg;
+
+gen_status gen_markov_preset(gen_markov_model *m, uint8_t scale, uint8_t style);
+/* Heuristic weight for one preset cell. LEARNED returns 0. */
+uint8_t    gen_markov_style_weight(uint8_t style, uint8_t n_deg, uint8_t from, uint8_t to);
+/* Replace counts from `src`. `scratch` is required and must differ from `m`.
+ * On error `m` is unchanged. gap_ticks == 0 does not break the chain on time gaps.
+ * Out-of-scale notes are skipped and break the chain. */
+gen_status gen_markov_learn(gen_markov_model *m, uint8_t scale, int root,
+                            const gen_buf *src, uint32_t gap_ticks,
+                            gen_markov_model *scratch);
+/* Accumulate one observed transition. Saturating at 65535 returns OVERFLOW
+ * and leaves the cell unchanged. */
+gen_status gen_markov_add(gen_markov_model *m, uint8_t from, uint8_t to);
+gen_status gen_markov_generate(const gen_markov_model *m, const gen_markov_cfg *cfg,
+                               gen_buf *out);
+
+/* ---- mutation lab ---------------------------------------------------------- */
+/* One request applies a fixed order of operations to a copy of `src`.
+ * `src` is never written. Aliasing `out->events` with `src->events` is rejected
+ * before any write. `out->count` must be 0. Unconditional reverse/rotate are
+ * distinct from probabilistic mutations: probability 0 with those flags clear
+ * copies the source. */
+#define GEN_MUTATE_MAX_STEPS 128
+#define GEN_MUTATE_NATIVE_STEPS 64
+#define GEN_MUT_PROTECT_PITCH 0x01u
+#define GEN_MUT_PROTECT_RHYTHM 0x02u
+#define GEN_MUT_PROTECT_VELOCITY 0x04u
+#define GEN_MUT_PROTECT_DURATION 0x08u
+
+typedef struct gen_mutate_req {
+    uint32_t ticks_per_step;
+    uint32_t gate_min;
+    uint32_t gate_max;
+    uint32_t seed;
+    int16_t  root;
+    int16_t  pitch_min;
+    int16_t  pitch_max;
+    uint16_t dest_steps;     /* 1..128; bytes 0..7 of the mask cover native 1..64 */
+    int8_t   octave;         /* -2..2; 0 = off; unconditional */
+    int8_t   rotate_steps;   /* 0 = off; unconditional; passed to gen_xform_rotate */
+    uint8_t  scale;
+    uint8_t  pitch_prob;
+    uint8_t  quantize;       /* 0 or 1; unconditional */
+    uint8_t  displace_prob;
+    uint8_t  insert_prob;
+    uint8_t  remove_prob;
+    uint8_t  velocity_prob;
+    uint8_t  gate_prob;
+    uint8_t  reverse;        /* 0 or 1; unconditional */
+    uint8_t  intensity;      /* 0..24 semitones / steps */
+    uint8_t  protect;        /* GEN_MUT_PROTECT_* */
+    uint8_t  vel_min;
+    uint8_t  vel_max;
+    uint8_t  _pad;
+    /* Bit i protects step i. Bits 0..63 are the native mask.
+     * Bits 64..127 are the portable extension. */
+    uint8_t  protect_steps[GEN_MUTATE_MAX_STEPS / 8];
+} gen_mutate_req;
+
+void gen_mutate_protect_step(gen_mutate_req *req, unsigned step, int on);
+int  gen_mutate_step_protected(const gen_mutate_req *req, unsigned step);
+/* `out->capacity` must be at least `dest_steps` (one event per step). */
+gen_status gen_mutate(const gen_buf *src, const gen_mutate_req *req, gen_buf *out);
+
 #ifdef __cplusplus
 }
 #endif

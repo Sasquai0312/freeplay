@@ -1,0 +1,26 @@
+generator: markov_bassline
+seed: 66
+root: 36
+scale: natural_minor
+length_steps: 16
+ticks_per_step: 480
+tempo_bpm: 120
+settings: style bassline, rest 5, range 36-60, gate 360
+event_count: 13
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: ee0ebfcd
+events:
+  tick=0 note=48 vel=96 dur=360 ch=0
+  tick=480 note=48 vel=96 dur=360 ch=0
+  tick=960 note=48 vel=96 dur=360 ch=0
+  tick=2400 note=48 vel=96 dur=360 ch=0
+  tick=3360 note=43 vel=96 dur=360 ch=0
+  tick=3840 note=43 vel=96 dur=360 ch=0
+  tick=4320 note=38 vel=96 dur=360 ch=0
+  tick=4800 note=36 vel=96 dur=360 ch=0
+  tick=5280 note=41 vel=96 dur=360 ch=0
+  tick=5760 note=36 vel=96 dur=360 ch=0
+  tick=6240 note=36 vel=96 dur=360 ch=0
+  tick=6720 note=36 vel=96 dur=360 ch=0
+  tick=7200 note=46 vel=96 dur=360 ch=0

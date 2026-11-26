@@ -1,0 +1,42 @@
+generator: turing
+seed: 33
+root: 57
+scale: natural_minor
+length_steps: 32
+ticks_per_step: 480
+tempo_bpm: 120
+settings: register 16, evolve 35, rest 10, lock 0, gate 360
+event_count: 29
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: 58196d75
+events:
+  tick=0 note=48 vel=100 dur=360 ch=0
+  tick=480 note=53 vel=100 dur=360 ch=0
+  tick=960 note=60 vel=100 dur=360 ch=0
+  tick=1440 note=76 vel=100 dur=360 ch=0
+  tick=1920 note=62 vel=100 dur=360 ch=0
+  tick=2400 note=57 vel=100 dur=360 ch=0
+  tick=2880 note=62 vel=100 dur=360 ch=0
+  tick=3360 note=53 vel=100 dur=360 ch=0
+  tick=4320 note=60 vel=100 dur=360 ch=0
+  tick=4800 note=59 vel=100 dur=360 ch=0
+  tick=5280 note=67 vel=100 dur=360 ch=0
+  tick=5760 note=72 vel=100 dur=360 ch=0
+  tick=6240 note=57 vel=100 dur=360 ch=0
+  tick=6720 note=69 vel=100 dur=360 ch=0
+  tick=7200 note=60 vel=100 dur=360 ch=0
+  tick=7680 note=48 vel=100 dur=360 ch=0
+  tick=8160 note=53 vel=100 dur=360 ch=0
+  tick=9120 note=55 vel=100 dur=360 ch=0
+  tick=9600 note=62 vel=100 dur=360 ch=0
+  tick=10080 note=50 vel=100 dur=360 ch=0
+  tick=10560 note=72 vel=100 dur=360 ch=0
+  tick=11040 note=53 vel=100 dur=360 ch=0
+  tick=12000 note=60 vel=100 dur=360 ch=0
+  tick=12480 note=76 vel=100 dur=360 ch=0
+  tick=12960 note=52 vel=100 dur=360 ch=0
+  tick=13440 note=72 vel=100 dur=360 ch=0
+  tick=13920 note=57 vel=100 dur=360 ch=0
+  tick=14400 note=69 vel=100 dur=360 ch=0
+  tick=14880 note=60 vel=100 dur=360 ch=0

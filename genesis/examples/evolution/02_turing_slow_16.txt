@@ -1,0 +1,27 @@
+generator: turing
+seed: 22
+root: 62
+scale: dorian
+length_steps: 16
+ticks_per_step: 480
+tempo_bpm: 120
+settings: register 16, evolve 12, rest 8, lock 0, gate 360
+event_count: 14
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: 720dd392
+events:
+  tick=0 note=57 vel=100 dur=360 ch=0
+  tick=960 note=59 vel=100 dur=360 ch=0
+  tick=1440 note=74 vel=100 dur=360 ch=0
+  tick=1920 note=65 vel=100 dur=360 ch=0
+  tick=2400 note=59 vel=100 dur=360 ch=0
+  tick=2880 note=65 vel=100 dur=360 ch=0
+  tick=3360 note=71 vel=100 dur=360 ch=0
+  tick=3840 note=52 vel=100 dur=360 ch=0
+  tick=4320 note=67 vel=100 dur=360 ch=0
+  tick=5280 note=60 vel=100 dur=360 ch=0
+  tick=5760 note=74 vel=100 dur=360 ch=0
+  tick=6240 note=67 vel=100 dur=360 ch=0
+  tick=6720 note=69 vel=100 dur=360 ch=0
+  tick=7200 note=67 vel=100 dur=360 ch=0

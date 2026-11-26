@@ -1,0 +1,42 @@
+generator: markov_stepwise
+seed: 55
+root: 57
+scale: natural_minor
+length_steps: 32
+ticks_per_step: 480
+tempo_bpm: 120
+settings: style stepwise, rest 8, octave motion 1, initial degree 0, gate 360
+event_count: 29
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: e7f8970b
+events:
+  tick=0 note=69 vel=96 dur=360 ch=0
+  tick=960 note=69 vel=96 dur=360 ch=0
+  tick=1440 note=67 vel=96 dur=360 ch=0
+  tick=1920 note=69 vel=96 dur=360 ch=0
+  tick=2400 note=71 vel=96 dur=360 ch=0
+  tick=2880 note=72 vel=96 dur=360 ch=0
+  tick=3360 note=71 vel=96 dur=360 ch=0
+  tick=3840 note=69 vel=96 dur=360 ch=0
+  tick=4320 note=71 vel=96 dur=360 ch=0
+  tick=4800 note=69 vel=96 dur=360 ch=0
+  tick=5280 note=72 vel=96 dur=360 ch=0
+  tick=5760 note=69 vel=96 dur=360 ch=0
+  tick=6240 note=71 vel=96 dur=360 ch=0
+  tick=7200 note=69 vel=96 dur=360 ch=0
+  tick=7680 note=71 vel=96 dur=360 ch=0
+  tick=8160 note=69 vel=96 dur=360 ch=0
+  tick=8640 note=71 vel=96 dur=360 ch=0
+  tick=9120 note=69 vel=96 dur=360 ch=0
+  tick=10080 note=72 vel=96 dur=360 ch=0
+  tick=10560 note=74 vel=96 dur=360 ch=0
+  tick=11040 note=72 vel=96 dur=360 ch=0
+  tick=11520 note=71 vel=96 dur=360 ch=0
+  tick=12000 note=72 vel=96 dur=360 ch=0
+  tick=12480 note=74 vel=96 dur=360 ch=0
+  tick=12960 note=77 vel=96 dur=360 ch=0
+  tick=13440 note=81 vel=96 dur=360 ch=0
+  tick=13920 note=79 vel=96 dur=360 ch=0
+  tick=14400 note=76 vel=96 dur=360 ch=0
+  tick=14880 note=77 vel=96 dur=360 ch=0

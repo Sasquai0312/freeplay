@@ -1,5 +1,7 @@
 *.o
 tests/test_genesis
+tests/test_evolution
 tools/gen_demos
+tools/gen_evolution_demos
 build/
 __pycache__/

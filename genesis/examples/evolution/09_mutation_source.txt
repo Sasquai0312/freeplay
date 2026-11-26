@@ -1,0 +1,29 @@
+generator: mutation_identity
+seed: 100
+root: 60
+scale: natural_minor
+length_steps: 16
+ticks_per_step: 480
+tempo_bpm: 120
+settings: zero probability, C natural minor phrase, gate 360
+event_count: 16
+timing: step grid, gate within one step
+native_compatible: yes
+smf_fnv1a: d0915fc8
+events:
+  tick=0 note=60 vel=100 dur=360 ch=0
+  tick=480 note=63 vel=100 dur=360 ch=0
+  tick=960 note=65 vel=100 dur=360 ch=0
+  tick=1440 note=67 vel=100 dur=360 ch=0
+  tick=1920 note=70 vel=100 dur=360 ch=0
+  tick=2400 note=67 vel=100 dur=360 ch=0
+  tick=2880 note=65 vel=100 dur=360 ch=0
+  tick=3360 note=63 vel=100 dur=360 ch=0
+  tick=3840 note=60 vel=100 dur=360 ch=0
+  tick=4320 note=58 vel=100 dur=360 ch=0
+  tick=4800 note=60 vel=100 dur=360 ch=0
+  tick=5280 note=63 vel=100 dur=360 ch=0
+  tick=5760 note=65 vel=100 dur=360 ch=0
+  tick=6240 note=63 vel=100 dur=360 ch=0
+  tick=6720 note=62 vel=100 dur=360 ch=0
+  tick=7200 note=60 vel=100 dur=360 ch=0
