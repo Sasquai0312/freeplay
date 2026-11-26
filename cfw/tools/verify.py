@@ -43,6 +43,7 @@ KNOWN_CONSTANTS = {
     0x60000001: 'flash range bound (startend.c obj_ok: a Thumb code pointer is >= 0x60000001)',
     0x000927C0: 'Tap Tempo: 600000 (tenths of a BPM x ms per beat)',
     0x00021480: 'pages.c VU meter scale: 284 px x 480 (meter width x the -48.0 dB floor in tenths)',
+    0x0007060D: 'genesis_midi_caps: mono, velocity, duration, and lengths 16/32/64',
 }
 from ppf import PPF, diff  # noqa: E402
 

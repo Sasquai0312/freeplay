@@ -155,6 +155,54 @@ static void test_capacity_and_errors(void)
     CHECK(gen_arp(&(gen_arp_cfg){0}, (uint8_t[]){60}, 1, &b) == GEN_ERR_PARAM, "bad arp cfg");
 }
 
+static void test_long_lengths(void)
+{
+    static const int lens[] = {16, 32, 64, 128};
+    gen_event storage[128];
+    gen_buf b;
+    gen_rhythm r;
+    gen_melody_cfg cfg;
+    gen_arp_cfg ac;
+    uint8_t notes[3] = {57, 60, 64}; /* A minor pent-ish triad; A=57 */
+    int i, n;
+    memset(&cfg, 0, sizeof cfg);
+    cfg.root = 60;
+    cfg.scale = GEN_SCALE_NAT_MINOR;
+    cfg.pitch_min = 48;
+    cfg.pitch_max = 72;
+    cfg.vel_min = 80;
+    cfg.vel_max = 80;
+    cfg.duration = 480;
+    cfg.seed = 42;
+    for (i = 0; i < 4; i++) {
+        n = lens[i];
+        CHECK(gen_rhythm_euclidean(&r, (uint16_t)n, (uint16_t)(n / 2), 0, 480) == GEN_OK, "euclid len");
+        CHECK(r.step_count == (uint16_t)n, "euclid steps");
+        gen_buf_init(&b, storage, (uint32_t)n);
+        CHECK(gen_melody_uniform(&cfg, &r, &b) == GEN_OK, "melody len");
+        CHECK(b.count > 0 && b.events[b.count - 1].tick / 480 < (uint32_t)n, "melody in range");
+    }
+    CHECK(gen_rhythm_euclidean(&r, 129, 8, 0, 480) == GEN_ERR_PARAM, "129 rejected");
+    CHECK(gen_rhythm_probability(&r, 0, 480, 50, &(gen_rng){.state = 1}) == GEN_ERR_PARAM, "zero steps");
+    gen_buf_init(&b, storage, 127);
+    CHECK(gen_rhythm_euclidean(&r, 128, 128, 0, 480) == GEN_OK, "128 hits");
+    CHECK(gen_melody_uniform(&cfg, &r, &b) == GEN_ERR_CAPACITY, "no silent truncate");
+    CHECK(b.count == 0, "capacity rollback");
+    memset(&ac, 0, sizeof ac);
+    ac.mode = GEN_ARP_UP;
+    ac.rate = 480;
+    ac.gate = 240;
+    ac.octaves = 1;
+    ac.length = 128;
+    ac.velocity = 90;
+    ac.seed = 1;
+    gen_buf_init(&b, storage, 128);
+    CHECK(gen_arp(&ac, notes, 3, &b) == GEN_OK && b.count == 128, "arp 128");
+    ac.length = 200;
+    gen_buf_init(&b, storage, 128);
+    CHECK(gen_arp(&ac, notes, 3, &b) == GEN_ERR_CAPACITY && b.count == 0, "arp over buffer");
+}
+
 static void test_transforms(void)
 {
     gen_event storage[32];
@@ -255,6 +303,7 @@ int main(void)
     test_melody_det();
     test_chords_arp();
     test_capacity_and_errors();
+    test_long_lengths();
     test_transforms();
     test_smf();
     test_poly_preserve();

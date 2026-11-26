@@ -38,6 +38,8 @@ extern u32 fw_step_toggle(void *sel, int track, int step);
 #define GEN_FAIL_MID_EDIT 5
 #define GEN_FAIL_BEFORE_COMMIT 6
 #define GEN_FAIL_DURING_RESTORE 7
+#define GEN_FAIL_PAGE_EDGE 8 /* diagnostic: after the first write at step >= 16 */
+#define GEN_FAIL_NEAR_END 9  /* diagnostic: after the write before the last event */
 
 #define GEN_TPS 480u /* portable ticks per step used by fixtures */
 
@@ -80,7 +82,8 @@ static u32 udiv32(u32 n, u32 d)
 
 u32 genesis_midi_caps(void)
 {
-    return (1u << 0) | (1u << 2) | (1u << 3) | (1u << 9) | (1u << 10);
+    return (1u << 0) | (1u << 2) | (1u << 3) | (1u << 9) | (1u << 10)
+         | GEN_MIDI_CAP_LEN16 | GEN_MIDI_CAP_LEN32 | GEN_MIDI_CAP_LEN64;
 }
 
 int genesis_midi_validate_track(void *ctx, int track)
@@ -473,6 +476,10 @@ int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, 
         if (fail_at == GEN_FAIL_AFTER_FIRST_WRITE && wrote == 1)
             goto fail_restore;
         if (fail_at == GEN_FAIL_MID_EDIT && wrote == ((int)n + 1) / 2)
+            goto fail_restore;
+        if (fail_at == GEN_FAIL_PAGE_EDGE && (int)abs >= 16)
+            goto fail_restore;
+        if (fail_at == GEN_FAIL_NEAR_END && n > 1 && wrote == (int)n - 1)
             goto fail_restore;
     }
 

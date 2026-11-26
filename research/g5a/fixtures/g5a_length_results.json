@@ -1,0 +1,765 @@
+{
+  "passed": true,
+  "n_pass": 60,
+  "n_fail": 0,
+  "n_skip": 0,
+  "n_total": 60,
+  "results": [
+    {
+      "name": "boot lengths all 16",
+      "pass": true,
+      "detail": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "name": "knob reaches 64",
+      "pass": true,
+      "detail": {
+        "t8": 64,
+        "t9": 16
+      }
+    },
+    {
+      "name": "64 dest shows pat 64 and default len 16",
+      "pass": true,
+      "detail": [
+        "9",
+        "len",
+        "16",
+        "pat",
+        "64",
+        "Track",
+        "9",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "Genesis",
+        "need MIDI",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "pat",
+        "64",
+        "Lab",
+        "Melody",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "encoder raises requested length",
+      "pass": true,
+      "detail": [
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "20",
+        "pat",
+        "64",
+        "Length",
+        "20",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "genesis state found",
+      "pass": true,
+      "detail": "0x2004d670"
+    },
+    {
+      "name": "walk64 page 1",
+      "pass": true,
+      "detail": [
+        "/",
+        "4",
+        "A4",
+        "G4",
+        "G4",
+        "C4",
+        "A3",
+        "D3",
+        "C3",
+        "C3",
+        "C3",
+        "C3",
+        "E3",
+        "A3",
+        "E4",
+        "hits",
+        "47",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "walk64 page 2",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "47",
+          "seed",
+          "2026",
+          "trk",
+          "9"
+        ],
+        [
+          "A3",
+          "E4",
+          "C5",
+          "hits",
+          "47",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "walk64 page 3",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "47",
+          "seed",
+          "2026",
+          "trk",
+          "9"
+        ],
+        [
+          "G4",
+          "C5",
+          "A4",
+          "hits",
+          "47",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "walk64 page 4",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "47",
+          "seed",
+          "2026",
+          "trk",
+          "9"
+        ],
+        [
+          "E3",
+          "C4",
+          "E4",
+          "hits",
+          "47",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "walk64 apply",
+      "pass": true,
+      "detail": [
+        "64",
+        "pat",
+        "64",
+        "Length",
+        "64",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "walk64 readback",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "on": 47
+      }
+    },
+    {
+      "name": "walk64 sample untouched",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "walk64 cleared",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "arp64 page 1",
+      "pass": true,
+      "detail": [
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "hits",
+        "64",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "arp64 page 2",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "64",
+          "seed",
+          "42",
+          "trk",
+          "9"
+        ],
+        [
+          "G4",
+          "C4",
+          "E4",
+          "hits",
+          "64",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "arp64 page 3",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "64",
+          "seed",
+          "42",
+          "trk",
+          "9"
+        ],
+        [
+          "C4",
+          "E4",
+          "G4",
+          "hits",
+          "64",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "arp64 page 4",
+      "pass": true,
+      "detail": [
+        [
+          "Genesis",
+          "MIDI ok",
+          "Preview",
+          "64",
+          "seed",
+          "42",
+          "trk",
+          "9"
+        ],
+        [
+          "E4",
+          "G4",
+          "C4",
+          "hits",
+          "64",
+          "Bottom: Apply"
+        ]
+      ]
+    },
+    {
+      "name": "arp64 apply",
+      "pass": true,
+      "detail": [
+        "64",
+        "pat",
+        "64",
+        "Length",
+        "64",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "arp64 readback",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "on": 64
+      }
+    },
+    {
+      "name": "arp64 sample untouched",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "arp64 cleared",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "length still 64 after UI readback",
+      "pass": true,
+      "detail": 64
+    },
+    {
+      "name": "boundary read at 64",
+      "pass": true,
+      "detail": [
+        {
+          "step": 0,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 15,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 16,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 31,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 32,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 63,
+          "rc": 0,
+          "valid": true
+        },
+        {
+          "step": 64,
+          "rc": -2,
+          "valid": false
+        },
+        {
+          "step": 127,
+          "rc": -2,
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "caps include 16/32/64",
+      "pass": true,
+      "detail": "0x7060d"
+    },
+    {
+      "name": "caps omit 128",
+      "pass": true,
+      "detail": "0x7060d"
+    },
+    {
+      "name": "EMPTY_ONLY 64 writes 0..63",
+      "pass": true,
+      "detail": {
+        "rc": 0,
+        "n": 64
+      }
+    },
+    {
+      "name": "EMPTY_ONLY 64 rejects occupied",
+      "pass": true,
+      "detail": -8
+    },
+    {
+      "name": "REPLACE_REGION 64",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "64 page-edge failure restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "n": 0
+      }
+    },
+    {
+      "name": "track 9 unchanged by 64 edit",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "64 restore-failure keeps writes",
+      "pass": true,
+      "detail": {
+        "rc": -11,
+        "n": 64
+      }
+    },
+    {
+      "name": "knob reaches 32",
+      "pass": true,
+      "detail": {
+        "t8": 32,
+        "t0": 16
+      }
+    },
+    {
+      "name": "32 dest shows pat 32 and default len 16",
+      "pass": true,
+      "detail": [
+        "9",
+        "len",
+        "16",
+        "pat",
+        "32",
+        "Track",
+        "9",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "Genesis",
+        "need MIDI",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "pat",
+        "32",
+        "Lab",
+        "Melody",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "encoder sets requested length 32",
+      "pass": true,
+      "detail": [
+        "31",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen",
+        "Genesis",
+        "MIDI ok",
+        "Melody",
+        "trk",
+        "9",
+        "len",
+        "32",
+        "pat",
+        "32",
+        "Length",
+        "32",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "melody 32 page 1/2",
+      "pass": true,
+      "detail": [
+        "2",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "C4",
+        "A#4",
+        "D3",
+        "C3",
+        "C4",
+        "F3",
+        "D4",
+        "C4",
+        "F3",
+        "hits",
+        "25",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "melody encoder page 2",
+      "pass": true,
+      "detail": [
+        "C4",
+        "G#4",
+        "C3",
+        "G3",
+        "D3",
+        "C3",
+        "C5",
+        "G#3",
+        "A#4",
+        "A#3",
+        "A#4",
+        "hits",
+        "25",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "melody 32 apply",
+      "pass": true,
+      "detail": [
+        "32",
+        "pat",
+        "32",
+        "Length",
+        "32",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "melody 32 readback",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "on": 25
+      }
+    },
+    {
+      "name": "melody sample track unchanged",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "32 occupied prompts replace",
+      "pass": true,
+      "detail": [
+        "F4",
+        "A#3",
+        "D#4",
+        "D3",
+        "C5",
+        "G#4",
+        "D#3",
+        "hits",
+        "23",
+        "Apply=replace  Back=cancel"
+      ]
+    },
+    {
+      "name": "REPLACE 32 readback",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "toast": [
+          "32",
+          "Seed",
+          "43",
+          "Turn: value  Shift+Turn: param",
+          "Click: Generate",
+          "Shift+Click: Regen"
+        ]
+      }
+    },
+    {
+      "name": "32 cleared after replace",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "euclid 32 preview",
+      "pass": true,
+      "detail": [
+        "pg",
+        "1",
+        "/",
+        "2",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "hits",
+        "11",
+        "Bottom: Apply"
+      ]
+    },
+    {
+      "name": "euclid 32 readback",
+      "pass": true,
+      "detail": {
+        "bad": [],
+        "on": 11
+      }
+    },
+    {
+      "name": "stale step-20 edit rejected",
+      "pass": true,
+      "detail": [
+        "9",
+        "len",
+        "32",
+        "pat",
+        "32",
+        "Seed",
+        "42",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "32 fail before_snap restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail before_write restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail after_first restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail mid restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail page_edge restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail near_end restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 fail before_commit restores",
+      "pass": true,
+      "detail": {
+        "rc": -6,
+        "left": []
+      }
+    },
+    {
+      "name": "32 restore-failure keeps writes",
+      "pass": true,
+      "detail": {
+        "rc": -11,
+        "n": 32
+      }
+    },
+    {
+      "name": "REPLACE adapter 32",
+      "pass": true,
+      "detail": 0
+    },
+    {
+      "name": "step 32 rejected",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "step 0 accepted",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "preview rejects step 32",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "fresh climb to 64",
+      "pass": true,
+      "detail": 64
+    },
+    {
+      "name": "fresh knob restores 16",
+      "pass": true,
+      "detail": 16
+    },
+    {
+      "name": "step 16 rejected at length 16",
+      "pass": true,
+      "detail": {
+        "rc": -2,
+        "len": 16
+      }
+    }
+  ]
+}

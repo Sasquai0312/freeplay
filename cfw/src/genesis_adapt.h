@@ -17,6 +17,11 @@ extern "C" {
 #define GEN_MIDI_DUR_MAX 3840
 #define GEN_SNAP_MAGIC 0x47334153u /* "G3AS" */
 #define GEN_SNAP_MAX 64
+/* Verified native Track Lengths the adapter will edit. 128 is not a native length. */
+#define GEN_MIDI_CAP_LEN16 (1u << 16)
+#define GEN_MIDI_CAP_LEN32 (1u << 17)
+#define GEN_MIDI_CAP_LEN64 (1u << 18)
+#define GEN_MIDI_DEST_MAX 64
 
 typedef enum gen_apply_policy {
     GEN_APPLY_EMPTY_ONLY = 0,
@@ -106,7 +111,7 @@ typedef struct gen_apply_req {
     const gen_event *ev;
     u32 n;
     gen_apply_policy policy;
-    int fail_at; /* 0=none; 1..7 injection stages — see genesis_adapt.c */
+    int fail_at; /* 0=none; 1..9 diagnostic stages — see genesis_adapt.c */
     gen_snap *snap_out;
 } gen_apply_req;
 

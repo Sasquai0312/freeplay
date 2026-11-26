@@ -1,0 +1,212 @@
+{
+  "lengths": {
+    "32": {
+      "got": 32,
+      "turns": 16
+    },
+    "64": {
+      "got": 32,
+      "turns": 200
+    },
+    "128": {
+      "got": 64,
+      "turns": 200
+    },
+    "96": {
+      "got": 64,
+      "turns": 200
+    },
+    "65": {
+      "got": 64,
+      "turns": 200
+    },
+    "max": 64
+  },
+  "bounds": {
+    "32": [
+      {
+        "step": 0,
+        "valid_expect": true,
+        "before": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "after": {
+          "on": true,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "restored": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "other9": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "other9_before": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true
+      },
+      {
+        "step": 15,
+        "valid_expect": true,
+        "before": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "after": {
+          "on": true,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "restored": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "other9": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "other9_before": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true
+      },
+      {
+        "step": 16,
+        "valid_expect": true,
+        "before": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "after": {
+          "on": true,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "restored": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "other9": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "other9_before": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true
+      },
+      {
+        "step": 31,
+        "valid_expect": true,
+        "before": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "after": {
+          "on": true,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "restored": {
+          "on": false,
+          "note": 72,
+          "vel": 90,
+          "dur": 120
+        },
+        "other9": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "other9_before": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true
+      },
+      {
+        "step": 32,
+        "valid_expect": false,
+        "readable": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true,
+        "note": "beyond length: recorded, not treated as valid destination"
+      },
+      {
+        "step": 63,
+        "valid_expect": false,
+        "readable": {
+          "on": false,
+          "note": null,
+          "vel": null,
+          "dur": null
+        },
+        "pass": true,
+        "note": "beyond length: recorded, not treated as valid destination"
+      },
+      {
+        "step": 64,
+        "valid_expect": false,
+        "readable": {
+          "on": true,
+          "note": 0,
+          "vel": 0,
+          "dur": 0
+        },
+        "pass": true,
+        "note": "beyond length: recorded, not treated as valid destination"
+      },
+      {
+        "step": 127,
+        "valid_expect": false,
+        "skipped": "not probed past 80 without length"
+      }
+    ]
+  },
+  "per_track_at_start": "all 16",
+  "semantics": "TRK_VT_LENGTH per track; knob 10 after select changes only that track"
+}

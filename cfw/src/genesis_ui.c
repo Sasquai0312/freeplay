@@ -4,6 +4,7 @@
 #include "genesis_adapt.h"
 #include "slice.h"
 #include "dlw.h"
+#include <stddef.h>
 
 #ifdef CFW_MOD
 
@@ -20,7 +21,8 @@ extern void fw_toast_show(void *toast, const char *msg);
 #define REDRAW_MS 40u
 #define GEN_TPS 480u
 #define MAX_EV 64
-#define PROD_PLEN 16 /* verified destination length for production Apply */
+#define PAGE_STEPS 16 /* grid page; not the destination length */
+#define MAX_DEST 64   /* verified native Track Length ceiling (knob 10) */
 #define PANEL_X 0
 #define PANEL_Y 24
 #define PANEL_W 320
@@ -41,14 +43,21 @@ struct genesis_ui {
     u8 max_intv, rpt, pulses, rot, mode, oct, preset;
     u8 valid_trk, dirty, lit, recovery;
     u8 n_ev, applied, confirm_replace, diag_fail_at; /* diag_fail_at: harness poke only */
+    u8 page, native_len;
     u16 seed;
-    u16 dest_occ; /* bitmask of occupied steps 0..15 at preview time */
+    u8 fp[MAX_DEST]; /* occupancy at preview time, one byte per step */
     u32 pattern_id;
     u32 key, drawn_ms;
     void *scr;
     gen_preview prev;
     gen_event events[MAX_EV]; /* exact preview events for Apply (no silent regen) */
 };
+
+_Static_assert(offsetof(struct genesis_ui, len) == 8, "genesis len offset");
+_Static_assert(offsetof(struct genesis_ui, diag_fail_at) == 32, "genesis fail offset");
+_Static_assert(offsetof(struct genesis_ui, page) == 33, "genesis page offset");
+_Static_assert(offsetof(struct genesis_ui, native_len) == 34, "genesis native_len offset");
+_Static_assert(offsetof(struct genesis_ui, seed) == 36, "genesis seed offset");
 
 static const char *const lab_name[LAB_N] = {"Melody", "Euclid", "Arp"};
 static const char *const scale_name[] = {
@@ -142,6 +151,7 @@ static void invalidate(struct genesis_ui *g)
     g->n_ev = 0;
     g->applied = 0;
     g->confirm_replace = 0;
+    g->page = 0;
     if (g->st == ST_PREV || g->st == ST_CONFIRM)
         g->st = ST_CFG;
     g->dirty = 1;
@@ -159,18 +169,36 @@ static u32 pattern_now(void *ctx)
     return U32(pm, PM_PLAYING);
 }
 
-static u16 dest_occ_mask(void *ctx, int track, int plen)
+static void capture_fp(void *ctx, int track, int plen, u8 *fp)
 {
     gen_native_step st;
-    u16 m = 0;
-    int i, lim = plen < 16 ? plen : 16;
-    for (i = 0; i < lim; i++) {
+    int i;
+    if (plen < 0)
+        plen = 0;
+    if (plen > MAX_DEST)
+        plen = MAX_DEST;
+    for (i = 0; i < MAX_DEST; i++)
+        fp[i] = 0;
+    for (i = 0; i < plen; i++) {
         if (genesis_midi_read_step(ctx, track, i, &st) != GEN_MIDI_OK)
             continue;
-        if (st.on)
-            m |= (u16)(1u << i);
+        fp[i] = st.on ? 1 : 0;
     }
-    return m;
+}
+
+static int fp_same(void *ctx, int track, int plen, const u8 *fp)
+{
+    gen_native_step st;
+    int i;
+    if (plen < 0 || plen > MAX_DEST)
+        return 0;
+    for (i = 0; i < plen; i++) {
+        if (genesis_midi_read_step(ctx, track, i, &st) != GEN_MIDI_OK)
+            return 0;
+        if ((st.on ? 1 : 0) != fp[i])
+            return 0;
+    }
+    return 1;
 }
 
 static int refresh_track(struct genesis_ui *g)
@@ -184,11 +212,18 @@ static int refresh_track(struct genesis_ui *g)
     if (!ok)
         return 0;
     plen = genesis_midi_pattern_length(ctx, g->track);
-    if (plen > 0 && plen <= NUM_STEPS) {
+    if (plen > 0 && plen <= NUM_STEPS && plen <= MAX_DEST) {
+        if (g->native_len != (u8)plen) {
+            g->native_len = (u8)plen;
+            invalidate(g);
+        }
         if (g->len > (u8)plen) {
             g->len = (u8)plen;
             invalidate(g);
         }
+    } else if (plen > MAX_DEST) {
+        g->valid_trk = 0;
+        return 0;
     }
     return 1;
 }
@@ -214,7 +249,6 @@ static int preflight_apply(struct genesis_ui *g, gen_apply_policy policy)
 {
     void *ctx = ctx_of(g);
     int plen, i;
-    u16 occ;
     if (!ctx)
         return GEN_MIDI_ERR_INTERNAL;
     if (g->recovery)
@@ -228,14 +262,13 @@ static int preflight_apply(struct genesis_ui *g, gen_apply_policy policy)
     if (genesis_midi_validate_track(ctx, g->track) != GEN_MIDI_OK)
         return GEN_MIDI_ERR_BAD_TRACK;
     plen = genesis_midi_pattern_length(ctx, g->track);
-    if (plen != PROD_PLEN || plen != g->prev.length)
+    if (plen < 1 || plen > MAX_DEST || plen != g->prev.length)
         return GEN_MIDI_ERR_CAPACITY;
     if (g->len > (u8)plen)
         return GEN_MIDI_ERR_CAPACITY;
     if (pattern_now(ctx) != g->pattern_id)
         return GEN_MIDI_ERR_BUSY;
-    occ = dest_occ_mask(ctx, g->track, plen);
-    if (occ != g->dest_occ)
+    if (!fp_same(ctx, g->track, plen, g->fp))
         return GEN_MIDI_ERR_BUSY; /* destination mutated since preview */
     for (i = 0; i < (int)g->n_ev; i++) {
         if (g->events[i].note > 127 || g->events[i].velocity < 1 || g->events[i].velocity > 127)
@@ -249,7 +282,7 @@ static u8 param_max(const struct genesis_ui *g, u8 p)
     switch (p) {
     case P_LAB: return LAB_N - 1;
     case P_TRK: return NUM_TRACKS - 1;
-    case P_LEN: return 64;
+    case P_LEN: return g->native_len ? g->native_len : (u8)MAX_DEST;
     case P_SEED: return 255; /* encoder adjusts low byte; click bumps high via regen */
     case P_ROOT: return 127;
     case P_SCALE: return (u8)GEN_SCALE_COUNT - 1;
@@ -484,18 +517,25 @@ static int do_generate(struct genesis_ui *g)
     }
     if (st != GEN_OK || gen_buf_validate(&buf, 1) != GEN_OK)
         goto fail;
+    if (buf.count == 0 || buf.count > MAX_EV)
+        goto fail;
 
     if (genesis_midi_preview_build(ctx, g->track, 0, buf.events, buf.count, GEN_TPS, g->seed,
                                    (u8)(g->lab + 1), GEN_APPLY_EMPTY_ONLY, &g->prev) != GEN_MIDI_OK)
         goto fail;
-    /* Keep exact events for Apply — never silently regenerate. */
+    if (g->prev.length < 1 || g->prev.length > MAX_DEST)
+        goto fail;
+    /* Keep exact events for Apply — never silently regenerate or drop. */
     g->n_ev = 0;
-    for (i = 0; i < buf.count && i < MAX_EV; i++) {
+    for (i = 0; i < buf.count; i++) {
         g->events[i] = buf.events[i];
         g->n_ev++;
     }
+    if (g->n_ev != buf.count)
+        goto fail;
     g->pattern_id = pattern_now(ctx);
-    g->dest_occ = dest_occ_mask(ctx, g->track, g->prev.length > 0 ? g->prev.length : PROD_PLEN);
+    capture_fp(ctx, g->track, g->prev.length, g->fp);
+    g->page = 0;
     g->applied = 0;
     g->confirm_replace = 0;
     g->st = ST_PREV;
@@ -530,7 +570,7 @@ static void toast_apply_err(void *ctx, int rc)
     else if (rc == GEN_MIDI_ERR_BUSY)
         say(ctx, "Stale preview", "");
     else if (rc == GEN_MIDI_ERR_CAPACITY)
-        say(ctx, "Need 16 steps", "");
+        say(ctx, "Bad length", "");
     else if (rc == GEN_MIDI_ERR_PARAM)
         say(ctx, "No preview", "");
     else
@@ -778,6 +818,18 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
         }
         return 1;
     }
+    if (kind == 4 && (g->st == ST_PREV || g->st == ST_CONFIRM)) {
+        s32 d = (s32)val;
+        int pages = (int)((g->len + PAGE_STEPS - 1) / PAGE_STEPS);
+        if (pages < 1)
+            pages = 1;
+        if (d > 0 && (int)g->page + 1 < pages)
+            g->page++;
+        else if (d < 0 && g->page)
+            g->page--;
+        g->dirty = 1;
+        return 1;
+    }
     if (kind == 4 && g->st == ST_CFG) { /* encoder: turn=value, Shift+turn=param */
         s32 d = (s32)val;
         if (d == 0)
@@ -813,8 +865,8 @@ const u8 *cfw_genesis_led(u32 led)
         return led_off;
     }
     if (col < PAD_COLS && track == g->track && g->prev.valid) {
-        step = col; /* page 0 only for pad preview */
-        if (step < GEN_SNAP_MAX && g->prev.occupancy[step])
+        step = (u32)g->page * PAGE_STEPS + col;
+        if (step < g->len && step < GEN_SNAP_MAX && g->prev.occupancy[step])
             return led_on;
         return led_off;
     }
@@ -960,22 +1012,44 @@ int cfw_genesis_render(void *w)
         text(&d, 200, 48, C_TEXT, 0, a);
         put_u(a, (u32)g->track + 1);
         text(&d, TILE_TEXT_X, 66, C_DIM, 0, "trk");
-        text(&d, 50, 66, C_TEXT, 0, a);
+        text(&d, 40, 66, C_TEXT, 0, a);
+        put_u(a, g->native_len);
+        text(&d, 70, 66, C_DIM, 0, "pat");
+        text(&d, 100, 66, C_TEXT, 0, a);
+        {
+            int pages = (int)((g->len + PAGE_STEPS - 1) / PAGE_STEPS);
+            int base, k;
+            if (pages < 1)
+                pages = 1;
+            if ((int)g->page >= pages)
+                g->page = (u8)(pages - 1);
+            put_u(a, (u32)g->page + 1);
+            text(&d, 140, 66, C_DIM, 0, "pg");
+            text(&d, 164, 66, C_TEXT, 0, a);
+            text(&d, 190, 66, C_DIM, 0, "/");
+            put_u(a, (u32)pages);
+            text(&d, 200, 66, C_TEXT, 0, a);
 
-        occupied = 0;
-        for (i = 0; i < g->len && i < GEN_SNAP_MAX; i++) {
-            x = TILE_TEXT_X + i * 14;
-            if (x + 12 > 310)
-                break;
-            dl(&d, DL_COLOR_RGB(g->prev.occupancy[i] ? C_ON : C_STEP));
-            dl(&d, DL_BEGIN(PRIM_RECTS));
-            dl(&d, DL_VERTEX2F(x * SUB, 90 * SUB));
-            dl(&d, DL_VERTEX2F((x + 12) * SUB, 118 * SUB));
-            dl(&d, DL_END);
-            if (g->prev.occupancy[i]) {
-                occupied++;
-                fmt_note(a, g->prev.notes[i]);
-                text_f(&d, (int)(x + 6), 122, FONT_SMALL, C_DIM, OPT_CENTERX, a);
+            occupied = 0;
+            for (i = 0; i < g->len && i < GEN_SNAP_MAX; i++) {
+                if (g->prev.occupancy[i])
+                    occupied++;
+            }
+            base = (int)g->page * PAGE_STEPS;
+            for (k = 0; k < PAGE_STEPS; k++) {
+                i = base + k;
+                if (i >= g->len || i >= GEN_SNAP_MAX)
+                    break;
+                x = TILE_TEXT_X + k * 14;
+                dl(&d, DL_COLOR_RGB(g->prev.occupancy[i] ? C_ON : C_STEP));
+                dl(&d, DL_BEGIN(PRIM_RECTS));
+                dl(&d, DL_VERTEX2F(x * SUB, 90 * SUB));
+                dl(&d, DL_VERTEX2F((x + 12) * SUB, 118 * SUB));
+                dl(&d, DL_END);
+                if (g->prev.occupancy[i]) {
+                    fmt_note(a, g->prev.notes[i]);
+                    text_f(&d, (int)(x + 6), 122, FONT_SMALL, C_DIM, OPT_CENTERX, a);
+                }
             }
         }
         put_u(a, occupied);
@@ -1000,8 +1074,11 @@ int cfw_genesis_render(void *w)
         text(&d, 120, 48, C_DIM, 0, "trk");
         text(&d, 150, 48, C_TEXT, 0, a);
         put_u(a, g->len);
-        text(&d, 200, 48, C_DIM, 0, "len");
-        text(&d, 230, 48, C_TEXT, 0, a);
+        text(&d, 188, 48, C_DIM, 0, "len");
+        text(&d, 214, 48, C_TEXT, 0, a);
+        put_u(a, g->native_len);
+        text(&d, 250, 48, C_DIM, 0, "pat");
+        text(&d, 276, 48, C_TEXT, 0, a);
 
         param_label(g, g->param, a);
         value_str(g, g->param, b);
