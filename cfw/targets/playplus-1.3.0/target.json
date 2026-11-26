@@ -238,7 +238,8 @@
           "../../../genesis/engine/melody.c",
           "../../../genesis/engine/arpeggiator.c",
           "../../src/genesis_adapt.c",
-          "../../src/genesis_aeabi.c"
+          "../../src/genesis_aeabi.c",
+          "../../src/genesis_ui.c"
         ]
       }
     }

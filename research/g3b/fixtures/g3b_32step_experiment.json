@@ -1,0 +1,9 @@
+{
+  "initial_plen": 16,
+  "attempt": "symbol_scan_and_api_probe",
+  "length_setter_symbol": null,
+  "ui_control_verified": false,
+  "fixture_C": "still_skipped",
+  "supported_workflow": 16,
+  "note": "No verified native pattern-length write path or UI control mapping found; do not speculate storage. Preserve 16-step workflow."
+}

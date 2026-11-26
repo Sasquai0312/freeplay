@@ -1,0 +1,232 @@
+{
+  "passed": true,
+  "n_pass": 17,
+  "n_total": 17,
+  "results": [
+    {
+      "name": "Genesis in root menu texts or navigable",
+      "pass": true,
+      "detail": [
+        "Menu",
+        "",
+        "",
+        "Menu",
+        "Project",
+        "Live Rec",
+        "Play",
+        "Perform",
+        "File",
+        "",
+        "Samples",
+        ""
+      ]
+    },
+    {
+      "name": "Genesis panel open (WMODE_GENESIS)",
+      "pass": true,
+      "detail": 7
+    },
+    {
+      "name": "config tiles Lab+/Apply",
+      "pass": true,
+      "detail": [
+        "Lab+",
+        "Apply"
+      ]
+    },
+    {
+      "name": "A preview shown",
+      "pass": true,
+      "detail": [
+        "Preview Melody",
+        "Genesis",
+        "MIDI ok",
+        "Preview",
+        "14",
+        "seed",
+        "42",
+        "trk",
+        "16",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "C4"
+      ]
+    },
+    {
+      "name": "A exit no sequencer mutation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "B lab Euclid",
+      "pass": true,
+      "detail": [
+        "Euclid",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Euclid",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "B euclid preview",
+      "pass": true,
+      "detail": [
+        "Genesis",
+        "MIDI ok",
+        "Preview",
+        "5",
+        "seed",
+        "42",
+        "trk",
+        "9",
+        "G#4",
+        "D#4",
+        "A#3",
+        "C3",
+        "G3",
+        "hits",
+        "5",
+        "Apply unavailable"
+      ]
+    },
+    {
+      "name": "B regenerate after param change",
+      "pass": true,
+      "detail": [
+        "Preview Euclid",
+        "Genesis",
+        "MIDI ok",
+        "Preview",
+        "5",
+        "seed",
+        "42",
+        "trk",
+        "9",
+        "G#4",
+        "D#4",
+        "A#3"
+      ]
+    },
+    {
+      "name": "C lab Arp",
+      "pass": true,
+      "detail": [
+        "Arp",
+        "trk",
+        "9",
+        "len",
+        "16",
+        "Lab",
+        "Arp",
+        "Turn: value  Shift+Turn: param",
+        "Click: Generate",
+        "Shift+Click: Regen"
+      ]
+    },
+    {
+      "name": "C arp preview",
+      "pass": true,
+      "detail": [
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "hits",
+        "16",
+        "Apply unavailable"
+      ]
+    },
+    {
+      "name": "C mode change regenerates",
+      "pass": true,
+      "detail": [
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "E4",
+        "G4",
+        "C4",
+        "hits",
+        "16",
+        "Apply unavailable"
+      ]
+    },
+    {
+      "name": "D preview ready",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "D unsupported / invalidate path exercised",
+      "pass": true,
+      "detail": [
+        "Preview Arp",
+        "Genesis",
+        "MIDI ok",
+        "Preview",
+        "16",
+        "seed",
+        "42",
+        "trk",
+        "9",
+        "C4"
+      ]
+    },
+    {
+      "name": "E cancel/exit no mutation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "F repeated open/generate/close stable",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "Apply disabled toast",
+      "pass": true,
+      "detail": [
+        "Apply in G3C"
+      ]
+    },
+    {
+      "name": "sample track never mutated in session",
+      "pass": true,
+      "detail": null
+    }
+  ],
+  "screenshots": [
+    "01_menu_root.png",
+    "01b_genesis_highlighted.png",
+    "02_generator_selection.png",
+    "03_melody_lab.png",
+    "04_euclidean_lab.png",
+    "05_arp_lab.png",
+    "06_preview_melody.png",
+    "06b_preview_euclid.png",
+    "06c_preview_arp.png",
+    "07_unsupported_track.png",
+    "08_apply_disabled.png"
+  ]
+}

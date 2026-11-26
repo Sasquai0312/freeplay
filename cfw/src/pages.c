@@ -47,6 +47,7 @@ struct pg {
     void *mod;           /* voice layer's state (mod.c) */
     void *cc;            /* CC presets' state (ccpreset.c) */
     void *slicer;        /* the Slice screen's state (slicer.c) */
+    void *genesis;       /* Menu > Genesis UI state (genesis_ui.c) */
     void *app;
     u8 pick, sel, orig;  /* the open Shift picker (PK_*), its highlight, the value to restore */
     u8 layer;            /* the Shift layer is what the page shows now */
@@ -653,6 +654,12 @@ void **cfw_pages_slicer(int alloc)
 {
     struct pg *g = alloc ? pg() : pg_valid();
     return g ? &g->slicer : 0;
+}
+
+void **cfw_pages_genesis(int alloc)
+{
+    struct pg *g = alloc ? pg() : pg_valid();
+    return g ? &g->genesis : 0;
 }
 
 void **cfw_pages_cc(int alloc)

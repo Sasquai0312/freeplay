@@ -32,6 +32,7 @@ struct cfw_view {
 #define WMODE_POOL 4 /* folder colours in the sample pool view (colors.c) */
 #define WMODE_LFO 5  /* Menu > LFO (lfoui.c) */
 #define WMODE_SLICER 6 /* Menu > Samples > Slice (slicer.c); WMODE_SLICE is its fallback without the ext code */
+#define WMODE_GENESIS 7 /* Menu > Genesis (genesis_ui.c) — preview only */
 
 #define RAND_MAGIC 0x524e4431u /* "RND1": the randomizer fields below are valid */
 struct cfw_rand {
@@ -277,6 +278,7 @@ void cfw_draw_heads(struct dlw *d, const struct sample *smp, int x, int wd, int 
 void **cfw_pages_mod(int alloc);   /* pages.c: where the state pointer lives */
 void **cfw_pages_cc(int alloc);
 void **cfw_pages_slicer(int alloc);
+void **cfw_pages_genesis(int alloc);
 void cfw_slicer_enter(void *scr);  /* slicer.c */
 void cfw_slicer_tick(void *app);
 int cfw_slicer_input(u32 kind, u32 id, u32 val);
@@ -288,6 +290,12 @@ void cfw_pts_delete_near(struct cfw_pts *t);
 void cfw_cc_append(void *ctx, void *menu, u32 channel); /* ccpreset.c */
 void cfw_menu_build_lfo(void *ctx, void *menu);
 void cfw_menu_build_matrix(void *ctx, void *menu);
+void cfw_menu_build_genesis(void *ctx, void *menu);
+void cfw_genesis_enter(void *scr);
+void cfw_genesis_tick(void *app);
+int cfw_genesis_input(u32 kind, u32 id, u32 val);
+int cfw_genesis_render(void *w);
+const u8 *cfw_genesis_led(u32 led);
 void cfw_lfo_enter(int matrix);    /* which view the panel opens on */
 int cfw_lfo_render(void *w);
 int cfw_lfo_input(u32 kind, u32 id, u32 val);

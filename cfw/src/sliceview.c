@@ -654,6 +654,8 @@ static int cfw_wave_render(void *w)
         return cfw_lfo_render(w);
     if (v->wmode == WMODE_SLICER)
         return cfw_slicer_render(w);
+    if (v->wmode == WMODE_GENESIS)
+        return cfw_genesis_render(w);
 #endif
     struct cfw_sel sl;
     struct sample smp;
@@ -836,12 +838,15 @@ static void view_close(void *scr, struct cfw_view *v)
         void *disp = v->disp;
         VFN(disp, DISP_FLUSH, void)(disp); /* never destroy a widget the manager still has queued */
         VFN(disp, DISP_DESTROY, void, u32)(disp, (u32)v->slot);
-        if ((v->wmode == WMODE_SLICE || v->wmode == WMODE_LFO || v->wmode == WMODE_SLICER) && PTR(scr, SCR_DISP) == disp) {
+        if ((v->wmode == WMODE_SLICE || v->wmode == WMODE_LFO || v->wmode == WMODE_SLICER ||
+             v->wmode == WMODE_GENESIS) &&
+            PTR(scr, SCR_DISP) == disp) {
             list_show(scr, disp, 1);
 #ifdef CFW_MOD
             /* stock's Back already drew its frame with the panel in it: one without */
             u32 ls = U32(scr, SCR_LIST_SLOT);
-            if ((v->wmode == WMODE_LFO || v->wmode == WMODE_SLICER) && ls < DISP_SLOTS && ((void **)PTR(disp, DISP_TABLE))[ls])
+            if ((v->wmode == WMODE_LFO || v->wmode == WMODE_SLICER || v->wmode == WMODE_GENESIS) &&
+                ls < DISP_SLOTS && ((void **)PTR(disp, DISP_TABLE))[ls])
                 VFN(disp, DISP_REFRESH, void, u32)(disp, ls);
 #endif
         }
@@ -859,7 +864,8 @@ void cfw_lfo_close_if_left(void *scr)
     struct cfw_view *v = &cfw_ram.view;
     void *sub = PTR(scr, SCR_SUBMENU), *b = sub ? PTR(sub, SUBMENU_BUILDER) : 0;
     if (U8(scr, SCR_VISIBLE) && (b == (void *)cfw_menu_build_lfo || b == (void *)cfw_menu_build_matrix ||
-                                 b == (void *)cfw_menu_build_slice))
+                                 b == (void *)cfw_menu_build_slice ||
+                                 b == (void *)cfw_menu_build_genesis))
         return;
     view_close(scr, v);
 }
@@ -880,7 +886,11 @@ void cfw_menu_screen_update(void *scr)
 #ifdef CFW_MOD
     void *lsub = PTR(scr, SCR_SUBMENU);
     int lmatrix = lsub && PTR(lsub, SUBMENU_BUILDER) == (void *)cfw_menu_build_matrix;
-    if (U8(scr, SCR_VISIBLE) && lsub && (lmatrix || PTR(lsub, SUBMENU_BUILDER) == (void *)cfw_menu_build_lfo) && cfw_ext_ok())
+    int lgenesis = lsub && PTR(lsub, SUBMENU_BUILDER) == (void *)cfw_menu_build_genesis;
+    if (U8(scr, SCR_VISIBLE) && lsub && lgenesis && cfw_ext_ok())
+        want = WMODE_GENESIS;
+    else if (U8(scr, SCR_VISIBLE) && lsub &&
+             (lmatrix || PTR(lsub, SUBMENU_BUILDER) == (void *)cfw_menu_build_lfo) && cfw_ext_ok())
         want = WMODE_LFO;
     else if (in_slice_menu(scr) && cfw_ext_ok())
         want = WMODE_SLICER;
@@ -928,6 +938,10 @@ void cfw_menu_screen_update(void *scr)
     if (want == WMODE_SLICER) {
         cfw_slicer_enter(scr);
         return; /* cfw_slicer_tick keeps it drawn */
+    }
+    if (want == WMODE_GENESIS) {
+        cfw_genesis_enter(scr);
+        return; /* cfw_genesis_tick keeps it drawn */
     }
 #endif
     v->ctx = PTR(scr, SCR_CTX);

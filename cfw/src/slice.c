@@ -150,7 +150,7 @@ static void pairs_to_bits(const u8 *pairs, u32 bits[NUM_TRACKS][2])
 
 #define MENU_ITEM_LIST 0x28  /* std::vector: begin, end, capacity end */
 #define MENU_LABEL_LIST 0x34
-#define ROOT_LFO_ROW 2       /* File, Samples, LFO, Matrix, ... */
+#define ROOT_LFO_ROW 2       /* File, Samples, LFO, Matrix, Genesis, ... */
 
 /* Replaces the root "Menu" builder. Runs before the menu screen is shown when the menu opens,
  * and again when navigating back to the root (then the menu screen is already current). */
@@ -173,16 +173,19 @@ void cfw_menu_build_root(void *ctx, void *menu)
         fw_menu_submenu_init(lfo, menu, "LFO", (void *)cfw_menu_build_lfo, 0);
         void *mx = fw_operator_new(SUBMENU_SIZE);
         fw_menu_submenu_init(mx, menu, "Matrix", (void *)cfw_menu_build_matrix, 0);
-        /* up the list, under Samples: the menu keeps its items and their labels in two parallel lists */
+        void *gen = fw_operator_new(SUBMENU_SIZE);
+        fw_menu_submenu_init(gen, menu, "Genesis", (void *)cfw_menu_build_genesis, 0);
+        /* up the list, under Samples: LFO, Matrix, Genesis (3 items) */
         for (u32 off = MENU_ITEM_LIST; off <= MENU_LABEL_LIST; off += MENU_LABEL_LIST - MENU_ITEM_LIST) {
             void **a = PTR(menu, off), **e = PTR(menu, off + 4);
             u32 n = (u32)(e - a);
-            if (n >= ROOT_LFO_ROW + 2) {
-                void *x = a[n - 2], *y = a[n - 1];
-                for (u32 i = n - 1; i >= ROOT_LFO_ROW + 2; i--)
-                    a[i] = a[i - 2];
+            if (n >= ROOT_LFO_ROW + 3) {
+                void *x = a[n - 3], *y = a[n - 2], *z = a[n - 1];
+                for (u32 i = n - 1; i >= ROOT_LFO_ROW + 3; i--)
+                    a[i] = a[i - 3];
                 a[ROOT_LFO_ROW] = x;
                 a[ROOT_LFO_ROW + 1] = y;
+                a[ROOT_LFO_ROW + 2] = z;
             }
         }
     }

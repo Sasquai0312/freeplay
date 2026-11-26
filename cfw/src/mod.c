@@ -590,6 +590,7 @@ void cfw_mod_tick(void *app)
     }
     cfw_lfo_blink(ctrl);
     cfw_slicer_tick(app);
+    cfw_genesis_tick(app);
     /* the LFO panel moves: the menu screen's own update doesn't run every pass */
     struct cfw_view *pv = &cfw_ram.view;
     if (pv->magic != VIEW_MAGIC || pv->wmode != WMODE_LFO)

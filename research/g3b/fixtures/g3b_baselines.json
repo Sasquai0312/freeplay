@@ -1,0 +1,13 @@
+{
+  "g3a_integrate": "42/42",
+  "g2_make_test": "All Genesis tests passed",
+  "emu_slice": "43/43",
+  "vdev_tap": "6/6",
+  "vdev_slicer": "38/38",
+  "vdev_screen": "6/23 (Settings brightness/dim env limitation with available snap; not expanded)",
+  "mono_harness": "6/6",
+  "ppf_unit_test_tools": "historical env fail (missing Play 1.6.0 stock + lld cfw_ext_ok); Play+ PPF SHA verified",
+  "g3b_ui_validate": "17/17",
+  "firmware_sha256": "535a903dffea93b9e624c7d0f613823812f7f7b1df74c91e93e3e93e8de94876",
+  "firmware_size": 4098017
+}

@@ -1,0 +1,17 @@
+{
+  "code_cave": {
+    "used": 13874,
+    "capacity": 16384,
+    "remaining": 2510
+  },
+  "extension": {
+    "used": 47864,
+    "capacity": 65536,
+    "remaining": 17672
+  },
+  "g3a_extension": 42648,
+  "ui_delta_ext": 5216,
+  "genesis_ui_o_text": 5293,
+  "additional_static_cfw_ram": 0,
+  "source": "PlayPlus_FreePlay_01.md Inserted end 0x6019c5f8 + llvm-size genesis_ui.o"
+}

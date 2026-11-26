@@ -238,6 +238,8 @@ int cfw_lfo_input(u32 kind, u32 id, u32 val)
     struct mod_save *s = cfw_mod_save_data();
     if (v->magic == VIEW_MAGIC && v->wmode == WMODE_SLICER && cfw_view_alive(v))
         return cfw_slicer_input(kind, id, val);
+    if (v->magic == VIEW_MAGIC && v->wmode == WMODE_GENESIS && cfw_view_alive(v))
+        return cfw_genesis_input(kind, id, val);
     if (!u || !s || v->magic != VIEW_MAGIC || v->wmode != WMODE_LFO || !cfw_view_alive(v))
         return 0;
     if (kind == 0) { /* a row's select pad: the track being edited */
@@ -367,8 +369,11 @@ const u8 *cfw_lfo_led(u32 led)
     struct cfw_view *v = &cfw_ram.view;
     struct mod_ui *u = cfw_mod_ui();
     u32 row = led / LED_COLS;
-    if (v->magic != VIEW_MAGIC || (v->wmode != WMODE_LFO && v->wmode != WMODE_SLICER))
+    if (v->magic != VIEW_MAGIC ||
+        (v->wmode != WMODE_LFO && v->wmode != WMODE_SLICER && v->wmode != WMODE_GENESIS))
         return 0;
+    if (v->wmode == WMODE_GENESIS)
+        return cfw_genesis_led(led);
     if (led % LED_COLS != SELECT_COL)
         return v->wmode == WMODE_SLICER ? cfw_slicer_led(led) : 0;
     if (!u || !u->blink || row >= MOD_TRACKS || !(u->focus & (1u << row)))
