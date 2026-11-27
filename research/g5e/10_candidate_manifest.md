@@ -8,6 +8,7 @@
 | Version | `1.3.0-FreePlay0.2e` |
 | Size | 4,255,906 bytes |
 | SHA-256 | `777461547a86d635c1c1d4bd7dafd01c4e406089cd2d53083a266768269bfdc0` |
+| Implementation | `7f40dcf09ebc2351848e21e7bebe6de494d7366b` |
 | Branch | `cursor/g5e-firmware-optimization` |
 | Base | `cursor/g5c3-alpha1-hardware-preflight` at `6e28718856c25af9d1c9a30a26a438e4fe7886a6` |
 | Compiler | clang 18.1.3, `-Oz`, `thumbv7em-none-eabihf`, hard float |
