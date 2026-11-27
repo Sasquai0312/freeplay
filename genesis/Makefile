@@ -4,7 +4,7 @@ CC ?= clang
 CFLAGS ?= -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -O2 -Iinclude
 SAN ?=
 ENGINE_SRCS := engine/event.c engine/random.c engine/scales.c engine/rhythm.c \
-               engine/melody.c engine/chords.c engine/arpeggiator.c engine/transform.c \
+               engine/melody.c engine/chords.c engine/chordprog.c engine/arpeggiator.c engine/transform.c \
                engine/transform_gate.c engine/turing.c engine/markov.c engine/mutate.c \
                engine/evolve.c
 ENGINE_OBJS := $(ENGINE_SRCS:.c=.o)

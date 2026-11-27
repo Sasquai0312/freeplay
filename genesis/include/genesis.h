@@ -84,6 +84,67 @@ int  gen_scale_contains(gen_scale s, int root, int note);
 int  gen_scale_quantize(gen_scale s, int root, int note, int lo, int hi);
 /* Degree 0..n-1 at octave (C4=60 reference for root degree 0 when root=60). */
 int  gen_scale_degree_to_midi(gen_scale s, int root, int degree, int octave);
+
+/* ---- native chord-id progressions (Play+ parameter 10) --------------------
+ * These ids are the stock display names, not a claim about sounding intervals.
+ * None=0 … Min 13th=20. 21 is not an id. The portable interval engine in
+ * chords.c is a different model and is not used here. */
+#define GEN_NID_MAX 20
+#define GEN_NID_MAJOR 3
+#define GEN_NID_MINOR 4
+#define GEN_NID_DIM 5
+#define GEN_NID_AUG 6
+#define GEN_NID_SUS2 7
+#define GEN_NID_SUS4 8
+#define GEN_NID_MAJ7 11
+#define GEN_NID_MIN7 12
+#define GEN_NID_MINMAJ7 13
+#define GEN_NID_DOM7 14
+
+typedef enum gen_native_prog {
+    GEN_NPROG_I_V_vi_IV = 0,
+    GEN_NPROG_I_vi_IV_V,
+    GEN_NPROG_ii_V_I,
+    GEN_NPROG_I_vi_ii_V,
+    GEN_NPROG_i_VI_III_VII,
+    GEN_NPROG_i_iv_VI_VII,
+    GEN_NPROG_i_iv_v,
+    GEN_NPROG_RANDOM,
+    GEN_NPROG_COUNT
+} gen_native_prog;
+
+typedef enum gen_native_qmode {
+    GEN_NMODE_TRIAD = 0,
+    GEN_NMODE_SEVENTH,
+    GEN_NMODE_FIXED,
+    GEN_NMODE_SEEDED,
+    GEN_NMODE_COUNT
+} gen_native_qmode;
+
+#define GEN_NHOLD_SUSTAIN 0
+#define GEN_NHOLD_RETRIG 1
+
+typedef struct gen_nchord_cfg {
+    int root;                 /* MIDI 0..127, scale tonic */
+    gen_scale scale;
+    gen_native_prog prog;
+    gen_native_qmode mode;
+    uint8_t fixed_id;         /* 0..20 when mode is FIXED */
+    uint8_t steps;            /* phrase length, 1..64 */
+    uint8_t interval;         /* 4, 8, 16, or 32, and not longer than steps */
+    uint8_t velocity;         /* 1..127 */
+    uint8_t hold;             /* GEN_NHOLD_SUSTAIN or GEN_NHOLD_RETRIG */
+    uint8_t channel;
+    uint16_t gate_ticks;      /* sounding length of one step, 1..ticks_per_step */
+    uint16_t ticks_per_step;
+    uint32_t seed;
+} gen_nchord_cfg;
+
+int gen_native_id_ok(int id);
+/* ids[i] is the native id for out->events[i]. On error the buffer count is 0
+ * and no partial phrase is left behind. */
+gen_status gen_native_progression(const gen_nchord_cfg *cfg, gen_buf *out,
+                                  uint8_t *ids, uint32_t ids_cap);
 int  gen_clamp_midi(int n);
 
 /* ---- rhythm ---------------------------------------------------------------- */

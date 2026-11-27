@@ -183,7 +183,7 @@ class Harness:
                 addr = base + i
                 b = self.vp.mu.mem_read(addr, 16)
                 # st, lab, param, track, len must look like a live panel
-                if b[4] <= 3 and b[5] < 6 and b[6] < 45 and b[7] < 16 and 1 <= b[8] <= 64:
+                if b[4] <= 3 and b[5] < 7 and b[6] < 46 and b[7] < 16 and 1 <= b[8] <= 64:
                     hits.append(addr)
                 start = i + 4
         return hits[0] if hits else 0

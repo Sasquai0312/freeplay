@@ -235,7 +235,8 @@
         "genesis_midi_restore",
         "genesis_midi_ticks_to_dur",
         "genesis_midi_ticks_to_step",
-        "genesis_midi_read_step"
+        "genesis_midi_read_step",
+        "genesis_diag_chord_apply"
       ],
       "ext": {
         "at": "0x60190b00",
@@ -254,6 +255,7 @@
           "../../../genesis/engine/event.c",
           "../../../genesis/engine/random.c",
           "../../../genesis/engine/scales.c",
+          "../../../genesis/engine/chordprog.c",
           "../../../genesis/engine/rhythm.c",
           "../../../genesis/engine/melody.c",
           "../../../genesis/engine/arpeggiator.c",

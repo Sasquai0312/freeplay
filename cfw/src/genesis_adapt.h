@@ -46,11 +46,25 @@ typedef enum gen_midi_err {
 
 typedef struct gen_native_step {
     u8 on;
-    u8 _pad;
+    /* Bit 7 is the chord-parameter lock (index 10). Bits 0..6 are the stock
+     * chord id 0..20 when that bit is set. Bit 7 clear means unlocked: getParam
+     * returns false, and a restore writes 0 then clears the lock. The stale
+     * halfword of an unlocked field is not kept; playback ignores it. */
+    u8 chord;
     s16 note; /* -1 = unlocked / unknown */
     s16 vel;
     s16 dur;
 } gen_native_step;
+
+static inline int gen_step_chord_locked(u8 bits)
+{
+    return (bits & 0x80u) != 0;
+}
+
+static inline int gen_step_chord_id(u8 bits)
+{
+    return (int)(bits & 0x7fu);
+}
 
 typedef struct gen_snap {
     u32 magic;
@@ -111,7 +125,7 @@ typedef struct gen_apply_req {
     const gen_event *ev;
     u32 n;
     gen_apply_policy policy;
-    int fail_at; /* 0=none; 1..9 diagnostic stages — see genesis_adapt.c */
+    int fail_at; /* 0=none; 1..10 diagnostic stages — see genesis_adapt.c */
     gen_snap *snap_out;
 } gen_apply_req;
 
@@ -157,9 +171,29 @@ int genesis_diag_generate(const gen_gen_req *req);
 /* Convenience wrappers (host / multi-arg call sites). */
 int genesis_midi_apply(void *ctx, int track, int step0, const gen_event *ev, u32 n,
                        u32 ticks_per_step, gen_apply_policy policy, gen_snap *snap_out);
+/* chords == NULL writes locked None (id 0) on every event so a monophonic
+ * replace cannot keep a stale chord. A non-NULL list is one id per event,
+ * already checked to be 0..20. Ids outside that range are rejected before
+ * the snapshot. */
 int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, u32 n,
                           u32 ticks_per_step, gen_apply_policy policy, gen_snap *snap_out,
-                          int fail_at);
+                          int fail_at, const u8 *chords);
+
+/* Diagnostic-only. One pointer argument for the emulator harness. */
+typedef struct gen_chord_req {
+    void *ctx;
+    int track;
+    int step0;
+    u32 ticks_per_step;
+    const gen_event *ev;
+    u32 n;
+    const u8 *chords;
+    int policy;
+    int fail_at;
+    gen_snap *snap_out;
+} gen_chord_req;
+
+int genesis_diag_chord_apply(const gen_chord_req *req);
 int genesis_midi_preview_build(void *ctx, int track, int step0, const gen_event *ev, u32 n,
                                u32 ticks_per_step, u32 seed, u8 generator, gen_apply_policy policy,
                                gen_preview *out);

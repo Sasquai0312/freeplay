@@ -1,0 +1,253 @@
+{
+  "names": [
+    {
+      "id": 0,
+      "expect": "None",
+      "bit10": 1
+    },
+    {
+      "id": 1,
+      "expect": "Power 4th",
+      "bit10": 1
+    },
+    {
+      "id": 2,
+      "expect": "Power 5th",
+      "bit10": 1
+    },
+    {
+      "id": 3,
+      "expect": "Major",
+      "bit10": 1
+    },
+    {
+      "id": 4,
+      "expect": "Minor",
+      "bit10": 1
+    },
+    {
+      "id": 5,
+      "expect": "Dim",
+      "bit10": 1
+    },
+    {
+      "id": 6,
+      "expect": "Aug",
+      "bit10": 1
+    },
+    {
+      "id": 7,
+      "expect": "Sus2",
+      "bit10": 1
+    },
+    {
+      "id": 8,
+      "expect": "Sus4",
+      "bit10": 1
+    },
+    {
+      "id": 9,
+      "expect": "Maj 6th",
+      "bit10": 1
+    },
+    {
+      "id": 10,
+      "expect": "Min 6th",
+      "bit10": 1
+    },
+    {
+      "id": 11,
+      "expect": "Maj 7th",
+      "bit10": 1
+    },
+    {
+      "id": 12,
+      "expect": "Min 7th",
+      "bit10": 1
+    },
+    {
+      "id": 13,
+      "expect": "MinMaj7",
+      "bit10": 1
+    },
+    {
+      "id": 14,
+      "expect": "Dom 7th",
+      "bit10": 1
+    },
+    {
+      "id": 15,
+      "expect": "Maj 9th",
+      "bit10": 1
+    },
+    {
+      "id": 16,
+      "expect": "Min 9th",
+      "bit10": 1
+    },
+    {
+      "id": 17,
+      "expect": "Maj 11th",
+      "bit10": 1
+    },
+    {
+      "id": 18,
+      "expect": "Min 11th",
+      "bit10": 1
+    },
+    {
+      "id": 19,
+      "expect": "Maj 13th",
+      "bit10": 1
+    },
+    {
+      "id": 20,
+      "expect": "Min 13th",
+      "bit10": 1
+    }
+  ],
+  "locks": [
+    {
+      "when": "fresh toggle",
+      "get": 0,
+      "bit10": 1,
+      "word": "001f0e43"
+    },
+    {
+      "when": "set 3",
+      "get": 3,
+      "bit10": 1
+    },
+    {
+      "when": "set 0",
+      "get": 0,
+      "bit10": 1
+    },
+    {
+      "when": "toggled off",
+      "on": 0,
+      "get": 0,
+      "bit10": 1
+    },
+    {
+      "when": "toggled on again",
+      "on": 1,
+      "get": 0,
+      "bit10": 1,
+      "note": 60
+    }
+  ],
+  "lengths": [
+    {
+      "target": 32,
+      "length": 32,
+      "steps": [
+        {
+          "step": 0,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 15,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 16,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 31,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        }
+      ],
+      "past": {
+        "step": 32,
+        "length": 32,
+        "in_range": false
+      }
+    },
+    {
+      "target": 64,
+      "length": 64,
+      "steps": [
+        {
+          "step": 0,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 15,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 16,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 31,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 32,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 47,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 48,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        },
+        {
+          "step": 63,
+          "chord": 3,
+          "note": 60,
+          "on": 1
+        }
+      ],
+      "past": {
+        "step": 64,
+        "length": 64,
+        "in_range": false
+      }
+    }
+  ],
+  "past_end": {
+    "before": 20,
+    "after_extra_detent": 20
+  },
+  "click": {
+    "get": 12,
+    "bit10": 1
+  },
+  "shift_click": {
+    "get": 12,
+    "bit10": 1
+  },
+  "len16": {
+    "length": 16,
+    "step16_on": 0,
+    "step16_in_range": false
+  }
+}

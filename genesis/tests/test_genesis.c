@@ -295,6 +295,260 @@ static void property_fuzz(void)
     }
 }
 
+static void fill_nchord(gen_nchord_cfg *c)
+{
+    memset(c, 0, sizeof *c);
+    c->root = 60;
+    c->scale = GEN_SCALE_MAJOR;
+    c->prog = GEN_NPROG_I_V_vi_IV;
+    c->mode = GEN_NMODE_TRIAD;
+    c->fixed_id = GEN_NID_MAJOR;
+    c->steps = 16;
+    c->interval = 4;
+    c->velocity = 100;
+    c->hold = GEN_NHOLD_SUSTAIN;
+    c->gate_ticks = 480;
+    c->ticks_per_step = 480;
+    c->seed = 1;
+}
+
+static void test_native_progression(void)
+{
+    gen_nchord_cfg c;
+    gen_event ev[64], ev2[64];
+    uint8_t ids[64], ids2[64];
+    gen_buf b, b2;
+    gen_status st;
+    int i, seed, uniq = 0;
+    uint8_t seen[128];
+
+    /* Major I–V–vi–IV triads: maj, maj, min, maj. Not every degree is major. */
+    fill_nchord(&c);
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && b.count == 4, "major I-V-vi-IV count");
+    CHECK(ids[0] == GEN_NID_MAJOR && ids[1] == GEN_NID_MAJOR && ids[2] == GEN_NID_MINOR &&
+              ids[3] == GEN_NID_MAJOR,
+          "major triad qualities");
+    CHECK(ev[0].note == 60 && ev[1].note == 67 && ev[2].note == 69 && ev[3].note == 65,
+          "major roots C G A F");
+    CHECK(ev[0].duration == 4 * 480u && ev[0].velocity == 100 && ev[0].tick == 0, "sustain span");
+    CHECK(ev[3].tick == 12 * 480u, "fourth chord step");
+
+    /* Natural minor keeps the same degrees and changes the qualities. */
+    c.scale = GEN_SCALE_NAT_MINOR;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK, "minor I-V-vi-IV");
+    CHECK(ids[0] == GEN_NID_MINOR && ids[1] == GEN_NID_MINOR && ids[2] == GEN_NID_MAJOR &&
+              ids[3] == GEN_NID_MINOR,
+          "natural-minor qualities");
+
+    /* Every preset on major triads, including the diminished vii when it is used. */
+    for (i = 0; i < GEN_NPROG_COUNT; i++) {
+        fill_nchord(&c);
+        c.prog = (gen_native_prog)i;
+        c.steps = 32;
+        c.interval = 8;
+        gen_buf_init(&b, ev, 64);
+        st = gen_native_progression(&c, &b, ids, 64);
+        CHECK(st == GEN_OK && b.count == 4, "preset generates");
+        CHECK(ids[0] <= GEN_NID_MAX, "preset id in range");
+    }
+
+    /* ii–V–I sevenths: min7, dom7, maj7. */
+    fill_nchord(&c);
+    c.prog = GEN_NPROG_ii_V_I;
+    c.mode = GEN_NMODE_SEVENTH;
+    c.steps = 12;
+    c.interval = 4;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && b.count == 3, "ii-V-I seventh count");
+    CHECK(ids[0] == GEN_NID_MIN7 && ids[1] == GEN_NID_DOM7 && ids[2] == GEN_NID_MAJ7,
+          "ii-V-I seventh ids");
+
+    /* vii in major is half-diminished. There is no stock id, so the phrase is rejected. */
+    fill_nchord(&c);
+    c.prog = GEN_NPROG_i_VI_III_VII;
+    c.mode = GEN_NMODE_SEVENTH;
+    gen_buf_init(&b, ev, 64);
+    b.count = 9;
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_ERR_UNSUPPORTED && b.count == 0, "half-diminished rejected");
+
+    /* The same degrees in natural minor are representable, and the last is dominant. */
+    c.scale = GEN_SCALE_NAT_MINOR;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && ids[3] == GEN_NID_DOM7, "natural-minor VII is dominant");
+
+    /* Harmonic minor III is augmented. i is minor-major 7. */
+    fill_nchord(&c);
+    c.scale = GEN_SCALE_HAR_MINOR;
+    c.prog = GEN_NPROG_i_VI_III_VII;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && ids[2] == GEN_NID_AUG, "harmonic III is aug");
+    c.mode = GEN_NMODE_SEVENTH;
+    c.prog = GEN_NPROG_i_iv_v;
+    c.steps = 12;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && ids[0] == GEN_NID_MINMAJ7 && ids[2] == GEN_NID_DOM7,
+          "harmonic i is minmaj7");
+
+    /* A pentatonic scale cannot spell degree 5. Do not substitute. */
+    fill_nchord(&c);
+    c.scale = GEN_SCALE_MAJOR_PENT;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_ERR_UNSUPPORTED && b.count == 0, "pentatonic degree rejected");
+
+    /* Fixed quality and an id the setter would clamp. */
+    fill_nchord(&c);
+    c.mode = GEN_NMODE_FIXED;
+    c.fixed_id = GEN_NID_SUS4;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_OK && ids[0] == GEN_NID_SUS4 && ids[3] == GEN_NID_SUS4, "fixed sus4");
+    c.fixed_id = 21;
+    gen_buf_init(&b, ev, 64);
+    b.count = 4;
+    st = gen_native_progression(&c, &b, ids, 64);
+    CHECK(st == GEN_ERR_PARAM && b.count == 0, "id 21 rejected");
+    CHECK(!gen_native_id_ok(21) && gen_native_id_ok(0) && gen_native_id_ok(20), "id bounds");
+
+    /* Seeded set and identical seeds. A different seed is allowed to differ. */
+    fill_nchord(&c);
+    c.mode = GEN_NMODE_SEEDED;
+    c.prog = GEN_NPROG_RANDOM;
+    c.seed = 42;
+    gen_buf_init(&b, ev, 64);
+    st = gen_native_progression(&c, &b, ids, 64);
+    gen_buf_init(&b2, ev2, 64);
+    CHECK(gen_native_progression(&c, &b2, ids2, 64) == GEN_OK, "seed repeat status");
+    CHECK(b.count == b2.count && memcmp(ids, ids2, b.count) == 0 &&
+              memcmp(ev, ev2, b.count * sizeof ev[0]) == 0,
+          "identical seed");
+    c.seed = 99;
+    gen_buf_init(&b2, ev2, 64);
+    CHECK(gen_native_progression(&c, &b2, ids2, 64) == GEN_OK, "changed seed status");
+    CHECK(b.count != b2.count || memcmp(ids, ids2, b.count) != 0 || ev[0].note != ev2[0].note,
+          "changed seed differs");
+
+    memset(seen, 0, sizeof seen);
+    for (seed = 1; seed <= 100; seed++) {
+        static const uint8_t allow[] = {
+            GEN_NID_MAJOR, GEN_NID_MINOR, GEN_NID_SUS2, GEN_NID_SUS4,
+            GEN_NID_MAJ7, GEN_NID_MIN7, GEN_NID_DOM7
+        };
+        int ok, k;
+        c.seed = (uint32_t)seed;
+        gen_buf_init(&b, ev, 64);
+        st = gen_native_progression(&c, &b, ids, 64);
+        CHECK(st == GEN_OK && b.count == 4, "seeded 100");
+        for (i = 0; i < (int)b.count; i++) {
+            ok = 0;
+            for (k = 0; k < (int)sizeof allow; k++)
+                if (ids[i] == allow[k])
+                    ok = 1;
+            CHECK(ok, "seeded id is in the set");
+            if (ev[i].note < 128)
+                seen[ev[i].note] = 1;
+        }
+    }
+    for (i = 0; i < 128; i++)
+        uniq += seen[i];
+    CHECK(uniq > 1, "100 seeds are not one pitch");
+
+    /* Random diatonic triads stay inside major, minor, and diminished. */
+    memset(seen, 0, sizeof seen);
+    fill_nchord(&c);
+    c.prog = GEN_NPROG_RANDOM;
+    c.mode = GEN_NMODE_TRIAD;
+    for (seed = 1; seed <= 100; seed++) {
+        c.seed = (uint32_t)seed;
+        gen_buf_init(&b, ev, 64);
+        st = gen_native_progression(&c, &b, ids, 64);
+        CHECK(st == GEN_OK, "random triad");
+        for (i = 0; i < (int)b.count; i++) {
+            CHECK(ids[i] == GEN_NID_MAJOR || ids[i] == GEN_NID_MINOR || ids[i] == GEN_NID_DIM,
+                  "diatonic triad id");
+            seen[ids[i]] = 1;
+        }
+    }
+    CHECK(seen[GEN_NID_MAJOR] && seen[GEN_NID_MINOR] && seen[GEN_NID_DIM],
+          "random triads use all three qualities");
+
+    /* Phrase lengths and intervals, including a repeated cycle and a short last span. */
+    fill_nchord(&c);
+    c.steps = 16;
+    c.interval = 16;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 1, "len 16");
+    c.steps = 32;
+    c.interval = 16;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 2, "len 32");
+    c.steps = 64;
+    c.interval = 16;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 4, "len 64");
+    c.interval = 8;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 8, "repeated cycle count");
+    CHECK(ids[0] == ids[4] && ev[0].note == ev[4].note, "progression repeats");
+    c.steps = 24;
+    c.interval = 16;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 2, "partial last span");
+    CHECK(ev[1].duration == 8 * 480u, "last span is shorter");
+    c.interval = 32;
+    c.steps = 16;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_ERR_PARAM, "interval longer than phrase");
+
+    /* Step retrigger uses one event per step and stays inside a step. */
+    fill_nchord(&c);
+    c.hold = GEN_NHOLD_RETRIG;
+    c.gate_ticks = 240;
+    c.steps = 8;
+    c.interval = 4;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK && b.count == 8, "retrigger count");
+    CHECK(ev[0].duration == 240 && ev[1].tick == 480 && ids[0] == ids[1], "retrigger timing");
+
+    /* Capacity is an error, not a truncated phrase. */
+    fill_nchord(&c);
+    gen_buf_init(&b, ev, 1);
+    b.count = 3;
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_ERR_CAPACITY && b.count == 0,
+          "event capacity");
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 1) == GEN_ERR_CAPACITY && b.count == 0, "id capacity");
+
+    /* Pitch that would leave MIDI, and a duration past the native maximum. */
+    fill_nchord(&c);
+    c.root = 127;
+    c.prog = GEN_NPROG_ii_V_I;
+    gen_buf_init(&b, ev, 64);
+    b.count = 2;
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_ERR_PITCH && b.count == 0, "pitch ceiling");
+    fill_nchord(&c);
+    c.steps = 32;
+    c.interval = 32;
+    c.gate_ticks = 480;
+    c.ticks_per_step = 60;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_ERR_TIMING && b.count == 0,
+          "native duration ceiling");
+    c.ticks_per_step = 480;
+    gen_buf_init(&b, ev, 64);
+    CHECK(gen_native_progression(&c, &b, ids, 64) == GEN_OK, "duration at the native limit fits");
+    CHECK(ev[0].duration == 32 * 480u, "long hold duration");
+}
+
 int main(void)
 {
     test_rng_kat();
@@ -308,6 +562,7 @@ int main(void)
     test_smf();
     test_poly_preserve();
     property_fuzz();
+    test_native_progression();
     if (g_fail) {
         fprintf(stderr, "%d checks failed\n", g_fail);
         return 1;

@@ -74,6 +74,18 @@
     ]
   },
   {
+    "name": "tap chords",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Chords",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
     "name": "tap wrap to melody",
     "pass": true,
     "detail": [

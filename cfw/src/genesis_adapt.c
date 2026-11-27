@@ -23,6 +23,10 @@ _Static_assert(offsetof(gen_gen_req, seed_out) == 16, "gen.seed_out");
 _Static_assert(sizeof(gen_gen_req) == 20, "gen_gen_req size");
 _Static_assert(offsetof(gen_preview, valid) == 21, "preview.valid");
 _Static_assert(offsetof(gen_preview, event_count) == 16, "preview.event_count");
+_Static_assert(sizeof(gen_chord_req) == 40, "gen_chord_req size");
+_Static_assert(offsetof(gen_chord_req, chords) == 24, "chord.chords");
+_Static_assert(offsetof(gen_chord_req, fail_at) == 32, "chord.fail");
+_Static_assert(offsetof(gen_chord_req, snap_out) == 36, "chord.snap");
 
 extern u32 fw_step_toggle(void *sel, int track, int step);
 
@@ -40,6 +44,10 @@ extern u32 fw_step_toggle(void *sel, int track, int step);
 #define GEN_FAIL_DURING_RESTORE 7
 #define GEN_FAIL_PAGE_EDGE 8 /* diagnostic: after the first write at step >= 16 */
 #define GEN_FAIL_NEAR_END 9  /* diagnostic: after the write before the last event */
+#define GEN_FAIL_READBACK 10 /* diagnostic: after the writes, before commit */
+#define GEN_MIDI_PARAM_CHORD 10
+#define STEP_VT_CLEAR_LOCK 0x30
+#define CHORD_LOCK 0x80u
 
 #define GEN_TPS 480u /* portable ticks per step used by fixtures */
 
@@ -136,7 +144,7 @@ int genesis_midi_read_step(void *ctx, int track, int step, gen_native_step *out)
     if (!st)
         return GEN_MIDI_ERR_INTERNAL;
     out->on = (u8)(VFN(st, STEP_VT_IS_ON, u32)(st) & 0xff);
-    out->_pad = 0;
+    out->chord = 0;
     out->note = out->vel = out->dur = -1;
     if (VFN(st, STEP_VT_GET_PARAM, u32, int, s16 *)(st, GEN_MIDI_PARAM_NOTE, &v) & 0xff)
         out->note = v;
@@ -144,6 +152,11 @@ int genesis_midi_read_step(void *ctx, int track, int step, gen_native_step *out)
         out->vel = v;
     if (VFN(st, STEP_VT_GET_PARAM, u32, int, s16 *)(st, GEN_MIDI_PARAM_DUR, &v) & 0xff)
         out->dur = v;
+    if (VFN(st, STEP_VT_GET_PARAM, u32, int, s16 *)(st, GEN_MIDI_PARAM_CHORD, &v) & 0xff) {
+        if (v < 0 || v > GEN_NID_MAX)
+            return GEN_MIDI_ERR_PARAM;
+        out->chord = (u8)(CHORD_LOCK | (u8)v);
+    }
     return GEN_MIDI_OK;
 }
 
@@ -311,6 +324,38 @@ int genesis_midi_remove(void *ctx, int track, int step)
     return GEN_MIDI_OK;
 }
 
+/* locked=1 stores id 0..20 and sets the lock. locked=0 stores 0 and clears
+ * the lock, which is the readable unlocked state. The stock setter clamps,
+ * so an out-of-range id never reaches it. */
+static int chord_store(void *ctx, int track, int step, int locked, int id)
+{
+    void *st;
+    if (locked && (id < 0 || id > GEN_NID_MAX))
+        return GEN_MIDI_ERR_PARAM;
+    st = cfw_step_at(ctx, track, step);
+    if (!st)
+        return GEN_MIDI_ERR_INTERNAL;
+    cfw_edit_lock();
+    if (locked)
+        VFN(st, STEP_VT_SET_PARAM, void, int, int)(st, GEN_MIDI_PARAM_CHORD, id);
+    else {
+        VFN(st, STEP_VT_SET_PARAM, void, int, int)(st, GEN_MIDI_PARAM_CHORD, 0);
+        VFN(st, STEP_VT_CLEAR_LOCK, void, int)(st, GEN_MIDI_PARAM_CHORD);
+    }
+    cfw_edit_unlock();
+    return GEN_MIDI_OK;
+}
+
+static int chord_is_locked(u8 bits)
+{
+    return (bits & CHORD_LOCK) != 0;
+}
+
+static int chord_id_bits(u8 bits)
+{
+    return (int)(bits & 0x7fu);
+}
+
 int genesis_midi_commit(void *ctx)
 {
     if (!ctx)
@@ -349,9 +394,28 @@ int genesis_midi_snapshot(void *ctx, int track, int step0, int count, gen_snap *
     return GEN_MIDI_OK;
 }
 
+/* setParam clamps velocity to 0..127. A stock toggle stores 7600 in that
+ * slot, and writing 7600 back comes out as 127. Callers must not treat that
+ * as a finished restore. */
+static int vel_round_trips(s16 vel)
+{
+    return vel >= 0 && vel <= 127;
+}
+
+static int param_unlock(void *ctx, int track, int step, int idx)
+{
+    void *st = cfw_step_at(ctx, track, step);
+    if (!st)
+        return GEN_MIDI_ERR_INTERNAL;
+    cfw_edit_lock();
+    VFN(st, STEP_VT_CLEAR_LOCK, void, int)(st, idx);
+    cfw_edit_unlock();
+    return GEN_MIDI_OK;
+}
+
 int genesis_midi_restore(void *ctx, const gen_snap *snap)
 {
-    int i, plen;
+    int i, plen, inexact = 0;
     if (!snap || snap->magic != GEN_SNAP_MAGIC)
         return GEN_MIDI_ERR_RESTORE;
     if (genesis_midi_validate_track(ctx, snap->track) != GEN_MIDI_OK)
@@ -368,17 +432,52 @@ int genesis_midi_restore(void *ctx, const gen_snap *snap)
         const gen_native_step *s = &snap->steps[i];
         int step = snap->step0 + i;
         if (s->on) {
-            if (s->note < 0 || s->vel < 0 || s->dur < 0)
+            if (s->note < 0 || s->note > 127 || s->dur < 0 || s->dur > GEN_MIDI_DUR_MAX)
                 return GEN_MIDI_ERR_RESTORE;
-            if (genesis_midi_upsert(ctx, snap->track, step, (u8)s->note, (u8)s->vel, s->dur) !=
-                GEN_MIDI_OK)
-                return GEN_MIDI_ERR_RESTORE;
+            if (vel_round_trips(s->vel)) {
+                if (genesis_midi_upsert(ctx, snap->track, step, (u8)s->note, (u8)s->vel, s->dur) !=
+                    GEN_MIDI_OK)
+                    return GEN_MIDI_ERR_RESTORE;
+            } else {
+                /* Occupancy, note, and duration can come back. Velocity cannot. */
+                void *st = cfw_step_at(ctx, snap->track, step);
+                void *sel = sel_of(ctx);
+                if (!st)
+                    return GEN_MIDI_ERR_RESTORE;
+                inexact = 1;
+                cfw_edit_lock();
+                if (!(VFN(st, STEP_VT_IS_ON, u32)(st) & 0xff))
+                    fw_step_toggle(sel, snap->track, step);
+                VFN(st, STEP_VT_SET_PARAM, void, int, int)(st, GEN_MIDI_PARAM_NOTE, (int)s->note);
+                VFN(st, STEP_VT_SET_PARAM, void, int, int)(st, GEN_MIDI_PARAM_DUR, (int)s->dur);
+                cfw_edit_unlock();
+            }
         } else {
             if (genesis_midi_remove(ctx, snap->track, step) != GEN_MIDI_OK)
                 return GEN_MIDI_ERR_RESTORE;
+            /* A failed write locks note, velocity, and duration. Clear those
+             * locks when the snapshot had them unlocked. The halfword may stay. */
+            if (s->note < 0 && param_unlock(ctx, snap->track, step, GEN_MIDI_PARAM_NOTE) != GEN_MIDI_OK)
+                return GEN_MIDI_ERR_RESTORE;
+            if (s->vel < 0 && param_unlock(ctx, snap->track, step, GEN_MIDI_PARAM_VEL) != GEN_MIDI_OK)
+                return GEN_MIDI_ERR_RESTORE;
+            if (s->dur < 0 && param_unlock(ctx, snap->track, step, GEN_MIDI_PARAM_DUR) != GEN_MIDI_OK)
+                return GEN_MIDI_ERR_RESTORE;
+        }
+        /* Toggle-on forces chord id 0. Put the saved lock and id back after it,
+         * including on a step that stays off (setParam while off does not toggle). */
+        if (chord_is_locked(s->chord)) {
+            if (chord_store(ctx, snap->track, step, 1, chord_id_bits(s->chord)) != GEN_MIDI_OK)
+                return GEN_MIDI_ERR_RESTORE;
+        } else if (chord_store(ctx, snap->track, step, 0, 0) != GEN_MIDI_OK) {
+            return GEN_MIDI_ERR_RESTORE;
         }
     }
     genesis_midi_commit(ctx);
+    /* Velocity (or another field) could not be written back. Chord, note,
+     * duration, and occupancy were. The caller keeps the recovery lock. */
+    if (inexact)
+        return GEN_MIDI_ERR_RESTORE;
     return GEN_MIDI_OK;
 }
 
@@ -387,18 +486,32 @@ int genesis_midi_apply_req(const gen_apply_req *req)
     if (!req)
         return GEN_MIDI_ERR_PARAM;
     return genesis_midi_apply_ex(req->ctx, req->track, req->step0, req->ev, req->n,
-                                 req->ticks_per_step, req->policy, req->snap_out, req->fail_at);
+                                 req->ticks_per_step, req->policy, req->snap_out, req->fail_at, 0);
 }
 
 int genesis_midi_apply(void *ctx, int track, int step0, const gen_event *ev, u32 n,
                        u32 ticks_per_step, gen_apply_policy policy, gen_snap *snap_out)
 {
-    return genesis_midi_apply_ex(ctx, track, step0, ev, n, ticks_per_step, policy, snap_out, 0);
+    return genesis_midi_apply_ex(ctx, track, step0, ev, n, ticks_per_step, policy, snap_out, 0, 0);
+}
+
+static int event_step(const gen_event *ev, u32 n, u32 ticks_per_step, int step0, int plen, int step)
+{
+    u32 i;
+    for (i = 0; i < n; i++) {
+        u32 abs;
+        s16 dur;
+        if (map_event(&ev[i], ticks_per_step, step0, plen, &abs, &dur) != GEN_MIDI_OK)
+            continue;
+        if ((int)abs == step)
+            return (int)i;
+    }
+    return -1;
 }
 
 int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, u32 n,
                           u32 ticks_per_step, gen_apply_policy policy, gen_snap *snap_out,
-                          int fail_at)
+                          int fail_at, const u8 *chords)
 {
     gen_snap local, *snap;
     int plen, r0, rlen, i, wrote = 0;
@@ -411,6 +524,11 @@ int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, 
     rc = genesis_midi_validate_events(ctx, track, step0, ev, n, ticks_per_step, policy);
     if (rc != GEN_MIDI_OK)
         return rc;
+    if (chords) {
+        for (ii = 0; ii < n; ii++)
+            if (chords[ii] > GEN_NID_MAX)
+                return GEN_MIDI_ERR_PARAM;
+    }
 
     plen = genesis_midi_pattern_length(ctx, track);
     {
@@ -458,18 +576,30 @@ int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, 
 
     if (policy == GEN_APPLY_REPLACE_REGION) {
         for (i = 0; i < rlen; i++) {
-            gen_native_step st;
-            genesis_midi_read_step(ctx, track, r0 + i, &st);
-            if (st.on)
-                genesis_midi_remove(ctx, track, r0 + i);
+            int step = r0 + i;
+            int is_ev = event_step(ev, n, ticks_per_step, step0, plen, step) >= 0;
+            const gen_native_step *orig = &snap->steps[i];
+            int latent = chord_is_locked(orig->chord) && chord_id_bits(orig->chord) != 0;
+            if (orig->on && genesis_midi_remove(ctx, track, step) != GEN_MIDI_OK)
+                goto fail_restore;
+            /* A cleared hole must not keep a latent chord id. Event steps are
+             * rewritten below. An off, unlocked, or locked-None hole stays. */
+            if (!is_ev && (orig->on || latent)) {
+                if (chord_store(ctx, track, step, 1, 0) != GEN_MIDI_OK)
+                    goto fail_restore;
+            }
         }
     }
 
     for (i = 0; i < (int)n; i++) {
         u32 abs;
         s16 dur;
+        int id = chords ? (int)chords[i] : 0;
         map_event(&ev[i], ticks_per_step, step0, plen, &abs, &dur);
         rc = genesis_midi_upsert(ctx, track, (int)abs, ev[i].note, ev[i].velocity, dur);
+        if (rc != GEN_MIDI_OK)
+            goto fail_restore;
+        rc = chord_store(ctx, track, (int)abs, 1, id);
         if (rc != GEN_MIDI_OK)
             goto fail_restore;
         wrote++;
@@ -481,6 +611,41 @@ int genesis_midi_apply_ex(void *ctx, int track, int step0, const gen_event *ev, 
             goto fail_restore;
         if (fail_at == GEN_FAIL_NEAR_END && n > 1 && wrote == (int)n - 1)
             goto fail_restore;
+    }
+
+    if (fail_at == GEN_FAIL_READBACK)
+        goto fail_restore;
+
+    for (i = 0; i < rlen; i++) {
+        int step = r0 + i;
+        int ei = event_step(ev, n, ticks_per_step, step0, plen, step);
+        gen_native_step now;
+        if (genesis_midi_read_step(ctx, track, step, &now) != GEN_MIDI_OK)
+            goto fail_restore;
+        if (ei >= 0) {
+            u32 abs;
+            s16 dur;
+            int id = chords ? (int)chords[ei] : 0;
+            map_event(&ev[ei], ticks_per_step, step0, plen, &abs, &dur);
+            if (!now.on || now.note != (s16)ev[ei].note || now.vel != (s16)ev[ei].velocity ||
+                now.dur != dur)
+                goto fail_restore;
+            if (!chord_is_locked(now.chord) || chord_id_bits(now.chord) != id)
+                goto fail_restore;
+        } else if (policy == GEN_APPLY_REPLACE_REGION) {
+            const gen_native_step *orig = &snap->steps[i];
+            int changed = orig->on || (chord_is_locked(orig->chord) && chord_id_bits(orig->chord) != 0);
+            if (changed) {
+                if (now.on || !chord_is_locked(now.chord) || chord_id_bits(now.chord) != 0)
+                    goto fail_restore;
+            } else if (now.on != orig->on || now.chord != orig->chord) {
+                goto fail_restore;
+            }
+        } else if (now.on != snap->steps[i].on || now.chord != snap->steps[i].chord ||
+                   now.note != snap->steps[i].note || now.vel != snap->steps[i].vel ||
+                   now.dur != snap->steps[i].dur) {
+            goto fail_restore;
+        }
     }
 
     if (fail_at == GEN_FAIL_BEFORE_COMMIT)
@@ -675,7 +840,16 @@ int genesis_diag_fixture(const gen_fixture_req *req)
                                           GEN_TPS, seed, (u8)req->fixture_id, req->policy,
                                           req->preview_out);
     return genesis_midi_apply_ex(req->ctx, req->track, req->step0, buf.events, buf.count, GEN_TPS,
-                                 req->policy, req->snap_out, req->fail_at);
+                                 req->policy, req->snap_out, req->fail_at, 0);
+}
+
+int genesis_diag_chord_apply(const gen_chord_req *req)
+{
+    if (!req)
+        return GEN_MIDI_ERR_PARAM;
+    return genesis_midi_apply_ex(req->ctx, req->track, req->step0, req->ev, req->n,
+                                 req->ticks_per_step, (gen_apply_policy)req->policy, req->snap_out,
+                                 req->fail_at, req->chords);
 }
 
 int genesis_diag_generate(const gen_gen_req *req)

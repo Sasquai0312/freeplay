@@ -32,7 +32,7 @@ extern void fw_toast_show(void *toast, const char *msg);
 enum { ST_CFG = 0, ST_PREV = 1, ST_ERR = 2, ST_CONFIRM = 3 };
 enum {
     LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2,
-    LAB_TURING = 3, LAB_MARKOV = 4, LAB_MUTATE = 5, LAB_N = 6
+    LAB_TURING = 3, LAB_MARKOV = 4, LAB_MUTATE = 5, LAB_CHORD = 6, LAB_N = 7
 };
 enum { ALG_UNI = 0, ALG_WALK = 1 };
 enum {
@@ -40,6 +40,7 @@ enum {
     P_VMIN, P_VMAX, P_GATE, P_INTV, P_RPT, P_PULSES, P_ROT, P_MODE, P_OCT, P_PRESET,
     P_EMODE, P_ELEN, P_EVOL, P_LOCK, P_STYLE, P_MOCT, P_MPITCH, P_MDISP, P_MVEL, P_MGATE,
     P_MINS, P_MREM, P_MREV, P_MROT, P_MOCTV, P_MQUANT, P_MINT, P_MPROT, P_MSTEP, P_MCLEAR,
+    P_CPRESET, P_CMODE, P_CFIXED, P_CINTV, P_CHOLD,
     P_RESET, P_N
 };
 
@@ -66,6 +67,10 @@ struct genesis_ui {
     u8 pstep[8]; /* bits 0..63: protected native steps */
     u8 src_n;
     gen_evo evo;
+    /* Chord lab state is appended so the harness offsets above stay put. */
+    u32 arm_ms;
+    u8 cpreset, cmode, cfixed, cintv, chold, arm_top;
+    u8 cid[MAX_EV];
 };
 
 _Static_assert(offsetof(struct genesis_ui, len) == 8, "genesis len offset");
@@ -73,10 +78,26 @@ _Static_assert(offsetof(struct genesis_ui, diag_fail_at) == 32, "genesis fail of
 _Static_assert(offsetof(struct genesis_ui, page) == 33, "genesis page offset");
 _Static_assert(offsetof(struct genesis_ui, native_len) == 34, "genesis native_len offset");
 _Static_assert(offsetof(struct genesis_ui, seed) == 36, "genesis seed offset");
+_Static_assert(offsetof(struct genesis_ui, cid) == 3134, "genesis chord id offset");
 
 static const char *const lab_name[LAB_N] = {
-    "Melody", "Euclid", "Arp", "Turing", "Markov", "Mutate"
+    "Melody", "Euclid", "Arp", "Turing", "Markov", "Mutate", "Chords"
 };
+static const char *const chord_prog_name[] = {
+    "I-V-vi-IV", "I-vi-IV-V", "ii-V-I", "I-vi-ii-V",
+    "i-VI-III-VII", "i-iv-VI-VII", "i-iv-v", "Random"
+};
+static const char *const chord_mode_name[] = {"Triad", "7th", "Fixed", "Seed"};
+static const char *const chord_full_name[] = {
+    "None", "Power 4th", "Power 5th", "Major", "Minor", "Dim", "Aug", "Sus2", "Sus4",
+    "Maj 6th", "Min 6th", "Maj 7th", "Min 7th", "MinMaj7", "Dom 7th", "Maj 9th",
+    "Min 9th", "Maj 11th", "Min 11th", "Maj 13th", "Min 13th"
+};
+static const char *const chord_short_name[] = {
+    "-", "P4", "P5", "Maj", "Min", "Dim", "Aug", "Su2", "Su4", "M6", "m6",
+    "M7", "m7", "mM7", "Dom", "M9", "m9", "M11", "m11", "M13", "m13"
+};
+static const u8 chord_span[] = {4, 8, 16, 32};
 static const char *const style_name[] = {"Step", "Motif", "Bass", "Expl", "Learn"};
 static const char *const scale_name[] = {
     "Chrom", "Major", "N.min", "H.min", "M.min", "Dor", "Phr", "Lyd",
@@ -112,7 +133,7 @@ static void step_prot_set(struct genesis_ui *g, unsigned step, int on)
 
 static int is_evo(const struct genesis_ui *g)
 {
-    return g->lab >= LAB_TURING;
+    return g->lab >= LAB_TURING && g->lab <= LAB_MUTATE;
 }
 
 /* Lab selects the shared Evolution engine. A different engine drops an
@@ -196,6 +217,11 @@ static struct genesis_ui *state(void)
         g->mint = 2;
         g->moctv = 2; /* octave shift 0 */
         g->mstep = 0;
+        g->cpreset = (u8)GEN_NPROG_I_V_vi_IV;
+        g->cmode = (u8)GEN_NMODE_TRIAD;
+        g->cfixed = (u8)GEN_NID_MAJOR;
+        g->cintv = 1; /* 8 steps */
+        g->chold = GEN_NHOLD_SUSTAIN;
         gen_evo_init(&g->evo);
         g->st = ST_CFG;
         g->dirty = 1;
@@ -357,6 +383,8 @@ static int preflight_apply(struct genesis_ui *g, gen_apply_policy policy)
     for (i = 0; i < (int)g->n_ev; i++) {
         if (g->events[i].note > 127 || g->events[i].velocity < 1 || g->events[i].velocity > 127)
             return GEN_MIDI_ERR_PARAM;
+        if (g->lab == LAB_CHORD && g->cid[i] > GEN_NID_MAX)
+            return GEN_MIDI_ERR_PARAM;
     }
     return genesis_midi_validate_events(ctx, g->track, 0, g->events, g->n_ev, GEN_TPS, policy);
 }
@@ -405,15 +433,36 @@ static u8 param_max(const struct genesis_ui *g, u8 p)
     case P_MPROT: return 15;
     case P_MSTEP: return g->len ? (u8)(g->len - 1) : 0;
     case P_MCLEAR: return 1;
+    case P_CPRESET: return (u8)GEN_NPROG_COUNT - 1;
+    case P_CMODE: return (u8)GEN_NMODE_COUNT - 1;
+    case P_CFIXED: return (u8)GEN_NID_MAX;
+    case P_CINTV:
+        if (g->len >= 32)
+            return 3;
+        if (g->len >= 16)
+            return 2;
+        if (g->len >= 8)
+            return 1;
+        return 0;
+    case P_CHOLD: return 1;
     default: return 0;
     }
 }
 
-static int param_visible(const struct genesis_ui *g, u8 p)
+/* noinline + optnone: -Oz otherwise folds these index tests into a 32-bit
+ * bitmask. A mask in 0x10000..0xFFFFF (0x18380, then 0x18300) is rejected by
+ * the firmware verifier as an unknown low address. The comparisons themselves
+ * are unchanged. */
+__attribute__((noinline, optnone)) static int param_visible(const struct genesis_ui *g, u8 p)
 {
+    if (g->lab == LAB_CHORD && p == P_VMAX)
+        return 0;
     if (p == P_LAB || p == P_TRK || p == P_LEN || p == P_SEED || p == P_ROOT || p == P_SCALE ||
         p == P_VMIN || p == P_VMAX || p == P_GATE)
         return 1;
+    if (g->lab == LAB_CHORD)
+        return p == P_CPRESET || p == P_CMODE || p == P_CINTV || p == P_CHOLD ||
+               (p == P_CFIXED && g->cmode == (u8)GEN_NMODE_FIXED);
     if (g->lab == LAB_MEL)
         return p == P_ALG || p == P_DENS || p == P_PMIN || p == P_PMAX ||
                (g->alg == ALG_WALK && (p == P_INTV || p == P_RPT));
@@ -476,6 +525,11 @@ static u8 *param_ptr(struct genesis_ui *g, u8 p)
     case P_MINT: return &g->mint;
     case P_MPROT: return &g->mprot;
     case P_MSTEP: return &g->mstep;
+    case P_CPRESET: return &g->cpreset;
+    case P_CMODE: return &g->cmode;
+    case P_CFIXED: return &g->cfixed;
+    case P_CINTV: return &g->cintv;
+    case P_CHOLD: return &g->chold;
     default: return 0;
     }
 }
@@ -857,6 +911,49 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     return gen_evo_mutate_preview(&g->evo, &src, &rq, buf, bind);
 }
 
+/* 1 = a locked chord id other than None. 0 = monophonic or empty.
+ * -1 = a step could not be read. Locked None is a monophonic step. */
+static int phrase_chord(const struct genesis_ui *g)
+{
+    void *ctx = ctx_of(g);
+    u32 i;
+    if (!ctx)
+        return -1;
+    for (i = 0; i < g->len && i < MAX_DEST; i++) {
+        gen_native_step st;
+        if (genesis_midi_read_step(ctx, g->track, (int)i, &st) != GEN_MIDI_OK)
+            return -1;
+        if (gen_step_chord_locked(st.chord) && gen_step_chord_id(st.chord) != 0)
+            return 1;
+    }
+    return 0;
+}
+
+static gen_status generate_chords(struct genesis_ui *g, gen_buf *buf)
+{
+    gen_nchord_cfg c;
+    u32 i;
+    u8 iv = g->cintv;
+    for (i = 0; i < sizeof c; i++)
+        ((u8 *)&c)[i] = 0;
+    if (iv > 3 || chord_span[iv] > g->len)
+        return GEN_ERR_PARAM;
+    c.root = g->root;
+    c.scale = (gen_scale)g->scale;
+    c.prog = (gen_native_prog)g->cpreset;
+    c.mode = (gen_native_qmode)g->cmode;
+    c.fixed_id = g->cfixed;
+    c.steps = g->len;
+    c.interval = chord_span[iv];
+    c.velocity = g->vmin < 1 ? 1 : g->vmin;
+    c.hold = g->chold ? (u8)GEN_NHOLD_RETRIG : (u8)GEN_NHOLD_SUSTAIN;
+    c.channel = 0;
+    c.gate_ticks = (uint16_t)gate_ticks(g);
+    c.ticks_per_step = (uint16_t)GEN_TPS;
+    c.seed = g->seed;
+    return gen_native_progression(&c, buf, g->cid, MAX_EV);
+}
+
 static int do_generate(struct genesis_ui *g)
 {
     void *ctx = ctx_of(g);
@@ -938,7 +1035,20 @@ static int do_generate(struct genesis_ui *g)
         ac.channel = 0;
         ac.seed = g->seed;
         st = gen_arp(&ac, notes, nn, &buf);
+    } else if (g->lab == LAB_CHORD) {
+        st = generate_chords(g, &buf);
     } else {
+        if (g->lab == LAB_MUTATE) {
+            int hc = phrase_chord(g);
+            if (hc != 0) {
+                g->prev.valid = 0;
+                g->n_ev = 0;
+                g->st = ST_ERR;
+                g->dirty = 1;
+                say(ctx, hc < 0 ? "Chord read" : "Has chords", "");
+                return GEN_MIDI_ERR_UNSUPPORTED;
+            }
+        }
         st = generate_evo(g, &buf);
     }
     if (st != GEN_OK || gen_buf_validate(&buf, 1) != GEN_OK)
@@ -955,6 +1065,8 @@ static int do_generate(struct genesis_ui *g)
     g->n_ev = 0;
     for (i = 0; i < buf.count; i++) {
         g->events[i] = buf.events[i];
+        if (g->lab != LAB_CHORD)
+            g->cid[i] = 0;
         g->n_ev++;
     }
     if (g->n_ev != buf.count)
@@ -986,7 +1098,20 @@ fail:
     g->prev.valid = 0;
     g->n_ev = 0;
     g->st = ST_ERR;
-    if (is_evo(g))
+    if (g->lab == LAB_CHORD) {
+        if (st == GEN_ERR_UNSUPPORTED)
+            say(ctx, "No quality", "");
+        else if (st == GEN_ERR_PITCH)
+            say(ctx, "Pitch range", "");
+        else if (st == GEN_ERR_TIMING)
+            say(ctx, "Duration", "");
+        else if (st == GEN_ERR_CAPACITY)
+            say(ctx, "Too many", "");
+        else if (st == GEN_ERR_PARAM)
+            say(ctx, "Bad chord setup", "");
+        else
+            say(ctx, "Generate failed", "");
+    } else if (is_evo(g))
         say_evo(ctx, st);
     else
         say(ctx, "Generate failed", "");
@@ -1053,7 +1178,7 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
     for (i = 0; i < sizeof snap; i++)
         ((u8 *)&snap)[i] = 0;
     rc = genesis_midi_apply_ex(ctx, g->track, 0, g->events, g->n_ev, GEN_TPS, policy, &snap,
-                               (int)g->diag_fail_at);
+                               (int)g->diag_fail_at, g->lab == LAB_CHORD ? g->cid : 0);
     g->diag_fail_at = 0; /* one-shot harness poke */
 
     if (rc == GEN_MIDI_ERR_OCCUPIED && policy == GEN_APPLY_EMPTY_ONLY) {
@@ -1151,13 +1276,23 @@ void cfw_genesis_enter(void *scr)
             }
         refresh_track(g);
         if (!g->valid_trk) {
+            /* Scan for any external MIDI track. If none is ready yet, stay on
+             * track 8 rather than the last index the scan tried. */
+            g->track = 8;
             for (t = 0; t < NUM_TRACKS; t++) {
                 g->track = (u8)t;
                 if (refresh_track(g))
                     break;
             }
+            if (!g->valid_trk)
+                g->track = 8;
         }
         g->lit = 1;
+        /* Menu Enter and Lab+ are both button 0. Swallow that opening click
+         * if it arrives within 200 ms. A later Lab+ still changes the lab.
+         * Recovery is not cleared here. */
+        g->arm_top = 1;
+        g->arm_ms = fw_millis;
         invalidate(g);
     }
     g->scr = scr;
@@ -1261,6 +1396,12 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
             return 0; /* stock leave */
         }
         if (id == BTN_TOP && val == 0) {
+            if (g->arm_top) {
+                u32 dt = fw_millis - g->arm_ms;
+                g->arm_top = 0;
+                if (dt < 200u)
+                    return 1;
+            }
             if (g->recovery) {
                 say(ctx, "Recovery required", "");
                 return 1;
@@ -1414,13 +1555,18 @@ static void param_label(const struct genesis_ui *g, u8 p, char *out)
         "Lab", "Track", "Phrase", "Seed", "Root", "Scale", "Algo", "Dens", "P.min", "P.max",
         "V.min", "V.max", "Gate%", "Intv", "Repeat", "Pulses", "Rotate", "Mode", "Oct", "Notes",
         "Engine", "RegLen", "Evolve", "Lock", "Style", "OctMv", "Pit%", "Rhy%", "Vel%", "GtVar",
-        "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Attr", "Step", "Clr", "Reset"
+        "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Attr", "Step", "Clr",
+        "Prog", "Qual", "Type", "ChInt", "Hold", "Reset"
     };
-    const char *s = p < P_N ? names[p] : "?";
+    const char *s;
+    _Static_assert(sizeof names / sizeof names[0] == P_N, "param names");
+    if (g->lab == LAB_CHORD && p == P_VMIN)
+        s = "Vel";
+    else
+        s = p < P_N ? names[p] : "?";
     while (*s)
         *out++ = *s++;
     *out = 0;
-    (void)g;
 }
 
 static void value_str(const struct genesis_ui *g, u8 p, char *out)
@@ -1489,6 +1635,33 @@ static void value_str(const struct genesis_ui *g, u8 p, char *out)
     case P_MQUANT:
     case P_MOCT:
         s = (*param_ptr((struct genesis_ui *)g, p)) ? "On" : "Off";
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_CPRESET:
+        s = chord_prog_name[g->cpreset < GEN_NPROG_COUNT ? g->cpreset : 0];
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_CMODE:
+        s = chord_mode_name[g->cmode < GEN_NMODE_COUNT ? g->cmode : 0];
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_CFIXED:
+        s = chord_full_name[g->cfixed <= GEN_NID_MAX ? g->cfixed : 0];
+        while (*s)
+            *o++ = *s++;
+        *o = 0;
+        return;
+    case P_CINTV:
+        put_u(out, chord_span[g->cintv < 4 ? g->cintv : 0]);
+        return;
+    case P_CHOLD:
+        s = g->chold ? "Step" : "Hold";
         while (*s)
             *o++ = *s++;
         *o = 0;
@@ -1617,6 +1790,48 @@ int cfw_genesis_render(void *w)
             text(&d, 250, 66, C_ACC, 0, learn_line(g));
         put_u(a, g->prev.event_count);
         text(&d, 120, 48, C_TEXT, 0, a);
+        if (g->lab == LAB_CHORD) {
+            char line[48], *p = line, *end = line + sizeof line;
+            const char *sc = g->scale < GEN_SCALE_COUNT ? scale_name[g->scale] : "?";
+            const char *pr = chord_prog_name[g->cpreset < GEN_NPROG_COUNT ? g->cpreset : 0];
+            const char *md = chord_mode_name[g->cmode < GEN_NMODE_COUNT ? g->cmode : 0];
+            fmt_note(a, g->root);
+            {
+                char *q = a;
+                while (*q && p < end - 1)
+                    *p++ = *q++;
+            }
+            *p++ = ' ';
+            while (*sc && p < end - 1)
+                *p++ = *sc++;
+            *p++ = ' ';
+            while (*pr && p < end - 1)
+                *p++ = *pr++;
+            *p++ = ' ';
+            while (*md && p < end - 1)
+                *p++ = *md++;
+            *p++ = ' ';
+            put_u(a, g->len);
+            {
+                char *q = a;
+                while (*q && p < end - 1)
+                    *p++ = *q++;
+            }
+            if (p < end - 1)
+                *p++ = '/';
+            put_u(a, chord_span[g->cintv < 4 ? g->cintv : 0]);
+            {
+                char *q = a;
+                while (*q && p < end - 1)
+                    *p++ = *q++;
+            }
+            *p++ = ' ';
+            sc = g->chold ? "Step" : "Hold";
+            while (*sc && p < end - 1)
+                *p++ = *sc++;
+            *p = 0;
+            text(&d, TILE_TEXT_X, 78, C_DIM, 0, line);
+        }
         text(&d, 160, 48, C_DIM, 0, "seed");
         put_u(a, g->seed);
         text(&d, 200, 48, C_TEXT, 0, a);
@@ -1664,8 +1879,18 @@ int cfw_genesis_render(void *w)
                     dl(&d, DL_END);
                 }
                 if (g->prev.occupancy[i]) {
+                    u32 ei;
                     fmt_note(a, g->prev.notes[i]);
                     text_f(&d, (int)(x + 6), 122, FONT_SMALL, C_DIM, OPT_CENTERX, a);
+                    if (g->lab == LAB_CHORD) {
+                        for (ei = 0; ei < g->n_ev; ei++) {
+                            if (g->events[ei].tick / GEN_TPS == i && g->cid[ei] <= GEN_NID_MAX) {
+                                text_f(&d, (int)(x + 6), 134, FONT_SMALL, C_TEXT, OPT_CENTERX,
+                                       chord_short_name[g->cid[ei]]);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }

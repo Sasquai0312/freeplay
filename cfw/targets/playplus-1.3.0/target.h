@@ -4,7 +4,7 @@
 #define TARGET_H
 
 #define TARGET_NAME "Play+ 1.3.0"
-#define CFW_VERSION_STRING "1.3.0-FreePlay0.2e"
+#define CFW_VERSION_STRING "1.3.0-FreePlay0.2f"
 
 /* menu controller (ctx passed to every menu builder; app+0x4460), ctor FUN_600e6824 */
 #define MENU_CTX_UI 0x00   /* UI manager (app+0x3cd8) */

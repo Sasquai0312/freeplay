@@ -89,7 +89,7 @@ class H:
                     break
                 addr = base + i
                 b = self.vp.mu.mem_read(addr, 16)
-                if b[4] <= 3 and b[5] < 6 and b[6] < 45 and b[7] < 16 and 1 <= b[8] <= 64:
+                if b[4] <= 3 and b[5] < 7 and b[6] < 46 and b[7] < 16 and 1 <= b[8] <= 64:
                     hits.append(addr)
                 start = i + 4
         self.base = hits[0] if hits else 0
@@ -153,7 +153,7 @@ class H:
         return False
 
     def goto_lab(self, lab, limit=8):
-        """Top cycles Melody, Euclid, Arp, Turing, Markov, Mutate."""
+        """Top cycles Melody, Euclid, Arp, Turing, Markov, Mutate, Chords."""
         for _ in range(limit):
             if self.u8(OFF_LAB) == lab:
                 return True
@@ -255,6 +255,9 @@ def main():
     check('tap mutate', h.u8(OFF_LAB) == 5 and h.u8(OFF_EVO_MODE) == 2 and
           any(x == 'Mutate' for x in h.texts()[-30:]), t[-6:])
     h.shot(os.path.join(shot_dir, '02c_mutate.png'))
+    t = h.tap(BTN_TOP)
+    check('tap chords', h.u8(OFF_LAB) == 6 and any(x == 'Chords' for x in h.texts()[-30:]), t[-6:])
+    h.shot(os.path.join(shot_dir, '02d_chords.png'))
     t = h.tap(BTN_TOP)
     check('tap wrap to melody', h.u8(OFF_LAB) == 0 and h.u8(OFF_EVO_MODE) == 2, t[-4:])
     for _ in range(3):
