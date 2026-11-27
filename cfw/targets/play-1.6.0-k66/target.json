@@ -26,6 +26,7 @@
       "sources": [
         "../../src/slice.c",
         "../../src/sliceview.c",
+        "../../src/dlw.c",
         "../../src/screen.c",
         "../../src/tap.c",
         "../../src/delproj.c"

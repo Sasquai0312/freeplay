@@ -53,6 +53,9 @@ KNOWN_CONSTANTS = {
     0x000FFA50: 'cfw_pages_render: EVE VERTEX2F addend for x = TILE_TEXT_X (28 px)',
     # genesis_ui state() packs scale=2, alg=0, vmin=64, vmax=110 into one word
     0x6E400002: 'genesis_ui defaults: natural minor, uniform, velocity 64..110',
+    # next_param inlines param_visible. One lab test is a bitmask of
+    # parameter indices 0, 1, 2 and 19: Lab, Track, Phrase, and Arp Preset.
+    0x00080007: 'genesis_ui next_param: visible-parameter bits for Lab, Track, Phrase, Preset',
 }
 from ppf import PPF, diff  # noqa: E402
 

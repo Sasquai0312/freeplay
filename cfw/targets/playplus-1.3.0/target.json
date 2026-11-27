@@ -27,6 +27,8 @@
       "sources": [
         "../../src/slice.c",
         "../../src/sliceview.c",
+        "../../src/dlw.c",
+        "../../../genesis/engine/mutate.c",
         "../../src/synthrand.c",
         "../../src/screen.c",
         "../../src/tap.c",
@@ -217,6 +219,24 @@
         "cfw_fmt_startend",
         "cfw_led_set"
       ],
+      "gc": true,
+      "gc_keep": [
+        "cfw_genesis_set_recovery",
+        "cfw_genesis_recovery_active"
+      ],
+      "gc_keep_diag": [
+        "genesis_diag_fixture",
+        "genesis_diag_generate",
+        "genesis_midi_caps",
+        "genesis_midi_preview_req",
+        "genesis_midi_apply_req",
+        "genesis_midi_validate_track",
+        "genesis_midi_pattern_length",
+        "genesis_midi_restore",
+        "genesis_midi_ticks_to_dur",
+        "genesis_midi_ticks_to_step",
+        "genesis_midi_read_step"
+      ],
       "ext": {
         "at": "0x60190b00",
         "limit": "0x601a0b00",
@@ -240,7 +260,6 @@
           "../../../genesis/engine/transform.c",
           "../../../genesis/engine/turing.c",
           "../../../genesis/engine/markov.c",
-          "../../../genesis/engine/mutate.c",
           "../../../genesis/engine/evolve.c",
           "../../src/genesis_adapt.c",
           "../../src/genesis_aeabi.c",

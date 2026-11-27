@@ -30,7 +30,10 @@ extern void fw_toast_show(void *toast, const char *msg);
 #define PANEL_H 192
 
 enum { ST_CFG = 0, ST_PREV = 1, ST_ERR = 2, ST_CONFIRM = 3 };
-enum { LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2, LAB_EVO = 3, LAB_N = 4 };
+enum {
+    LAB_MEL = 0, LAB_EUC = 1, LAB_ARP = 2,
+    LAB_TURING = 3, LAB_MARKOV = 4, LAB_MUTATE = 5, LAB_N = 6
+};
 enum { ALG_UNI = 0, ALG_WALK = 1 };
 enum {
     P_LAB = 0, P_TRK, P_LEN, P_SEED, P_ROOT, P_SCALE, P_ALG, P_DENS, P_PMIN, P_PMAX,
@@ -71,8 +74,9 @@ _Static_assert(offsetof(struct genesis_ui, page) == 33, "genesis page offset");
 _Static_assert(offsetof(struct genesis_ui, native_len) == 34, "genesis native_len offset");
 _Static_assert(offsetof(struct genesis_ui, seed) == 36, "genesis seed offset");
 
-static const char *const lab_name[LAB_N] = {"Melody", "Euclid", "Arp", "Evo"};
-static const char *const evo_name[] = {"Turing", "Markov", "Mutate"};
+static const char *const lab_name[LAB_N] = {
+    "Melody", "Euclid", "Arp", "Turing", "Markov", "Mutate"
+};
 static const char *const style_name[] = {"Step", "Motif", "Bass", "Expl", "Learn"};
 static const char *const scale_name[] = {
     "Chrom", "Major", "N.min", "H.min", "M.min", "Dor", "Phr", "Lyd",
@@ -104,6 +108,29 @@ static void step_prot_set(struct genesis_ui *g, unsigned step, int on)
         g->pstep[step >> 3] |= bit;
     else
         g->pstep[step >> 3] &= (u8)~bit;
+}
+
+static int is_evo(const struct genesis_ui *g)
+{
+    return g->lab >= LAB_TURING;
+}
+
+/* Lab selects the shared Evolution engine. A different engine drops an
+ * unpublished preview and a pending learn. A committed register or model stays. */
+static void bind_lab(struct genesis_ui *g)
+{
+    u8 mode;
+    if (g->lab == LAB_MARKOV)
+        mode = GEN_EVO_MARKOV;
+    else if (g->lab == LAB_MUTATE)
+        mode = GEN_EVO_MUTATE;
+    else if (g->lab == LAB_TURING)
+        mode = GEN_EVO_TURING;
+    else
+        return;
+    if (g->evo_mode != mode)
+        gen_evo_set_mode(&g->evo, mode);
+    g->evo_mode = mode;
 }
 
 static void clamp_rot(struct genesis_ui *g)
@@ -394,17 +421,16 @@ static int param_visible(const struct genesis_ui *g, u8 p)
         return p == P_PULSES || p == P_ROT || p == P_PMIN || p == P_PMAX || p == P_DENS;
     if (g->lab == LAB_ARP)
         return p == P_MODE || p == P_OCT || p == P_PRESET;
-    if (g->lab == LAB_EVO) {
-        if (p == P_DENS || p == P_PMIN || p == P_PMAX || p == P_EMODE)
-            return g->evo_mode != GEN_EVO_MUTATE || p != P_DENS;
-        if (g->evo_mode == GEN_EVO_TURING)
-            return p == P_ELEN || p == P_EVOL || p == P_LOCK || p == P_RESET;
-        if (g->evo_mode == GEN_EVO_MARKOV)
-            return p == P_STYLE || p == P_MOCT;
-        return p == P_MPITCH || p == P_MDISP || p == P_MVEL || p == P_MGATE || p == P_MINS ||
-               p == P_MREM || p == P_MREV || p == P_MROT || p == P_MOCTV || p == P_MQUANT ||
-               p == P_MINT || p == P_MPROT || p == P_MSTEP || p == P_MCLEAR;
-    }
+    if (g->lab == LAB_TURING)
+        return p == P_DENS || p == P_PMIN || p == P_PMAX || p == P_ELEN || p == P_EVOL ||
+               p == P_LOCK || p == P_RESET;
+    if (g->lab == LAB_MARKOV)
+        return p == P_DENS || p == P_PMIN || p == P_PMAX || p == P_STYLE || p == P_MOCT;
+    if (g->lab == LAB_MUTATE)
+        return p == P_PMIN || p == P_PMAX || p == P_MPITCH || p == P_MDISP || p == P_MVEL ||
+               p == P_MGATE || p == P_MINS || p == P_MREM || p == P_MREV || p == P_MROT ||
+               p == P_MOCTV || p == P_MQUANT || p == P_MINT || p == P_MPROT || p == P_MSTEP ||
+               p == P_MCLEAR;
     return 0;
 }
 
@@ -673,6 +699,8 @@ static void adjust(struct genesis_ui *g, s32 d)
         g->vmin = 1;
     if (p == P_LEN)
         clamp_rot(g);
+    if (p == P_LAB)
+        bind_lab(g);
     if (p == P_TRK || p == P_LAB || p == P_LEN)
         refresh_track(g);
     if (p == P_EMODE)
@@ -745,6 +773,7 @@ static gen_status generate_evo(struct genesis_ui *g, gen_buf *buf)
     uint32_t n = 0, bind, i;
     gen_status st;
     u32 gmax, gmin;
+    bind_lab(g);
     gen_evo_discard(&g->evo);
     g->src_n = 0;
     bind = evo_bind(g);
@@ -937,7 +966,7 @@ static int do_generate(struct genesis_ui *g)
     g->confirm_replace = 0;
     g->st = ST_PREV;
     g->dirty = 1;
-    if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && g->n_ev == g->src_n && g->src_n) {
+    if (g->lab == LAB_MUTATE && g->n_ev == g->src_n && g->src_n) {
         u32 same = 1;
         for (i = 0; i < g->n_ev; i++) {
             if (g->events[i].tick != g->evo_src[i].tick || g->events[i].note != g->evo_src[i].note ||
@@ -957,7 +986,7 @@ fail:
     g->prev.valid = 0;
     g->n_ev = 0;
     g->st = ST_ERR;
-    if (g->lab == LAB_EVO)
+    if (is_evo(g))
         say_evo(ctx, st);
     else
         say(ctx, "Generate failed", "");
@@ -1001,7 +1030,7 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
 
     if (!ctx)
         return GEN_MIDI_ERR_INTERNAL;
-    if (g->lab == LAB_EVO) {
+    if (is_evo(g)) {
         gen_evo_set_live(&g->evo, evo_bind(g));
         if (g->evo.phase != GEN_EVO_VALID) {
             say(ctx, "Stale preview", "");
@@ -1054,7 +1083,7 @@ static int do_apply(struct genesis_ui *g, gen_apply_policy policy)
         return rc;
     }
 
-    if (g->lab == LAB_EVO && gen_evo_apply_result(&g->evo, 1) != GEN_OK) {
+    if (is_evo(g) && gen_evo_apply_result(&g->evo, 1) != GEN_OK) {
         say(ctx, "State not saved", "");
         g->applied = 1;
         g->prev.valid = 0;
@@ -1190,7 +1219,7 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
         /* Step pads are swallowed while Genesis is open. On Mutation config they
          * toggle protection for the current 16-step page. Select column stays track select. */
         if (col < PAD_COLS && val == 0 && !g->recovery && g->st == ST_CFG &&
-            g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && track == g->track) {
+            g->lab == LAB_MUTATE && track == g->track) {
             u32 step = (u32)g->page * PAGE_STEPS + col;
             u8 pg = g->page;
             if (step < g->len) {
@@ -1238,6 +1267,7 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
             }
             g->lab = (u8)((g->lab + 1) % LAB_N);
             g->param = P_LAB;
+            bind_lab(g);
             invalidate(g);
             say(ctx, lab_name[g->lab], "");
             g->dirty = 1;
@@ -1339,7 +1369,7 @@ const u8 *cfw_genesis_led(u32 led)
         return led_off;
     }
     if (col < PAD_COLS && track == g->track && g->st == ST_CFG &&
-        g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE) {
+        g->lab == LAB_MUTATE) {
         step = (u32)g->page * PAGE_STEPS + col;
         if (step < g->len && step_prot(g, step))
             return led_on;
@@ -1381,7 +1411,7 @@ static void fmt_note(char *buf, u8 midi)
 static void param_label(const struct genesis_ui *g, u8 p, char *out)
 {
     static const char *const names[] = {
-        "Lab", "Track", "Length", "Seed", "Root", "Scale", "Algo", "Dens", "P.min", "P.max",
+        "Lab", "Track", "Phrase", "Seed", "Root", "Scale", "Algo", "Dens", "P.min", "P.max",
         "V.min", "V.max", "Gate%", "Intv", "Repeat", "Pulses", "Rotate", "Mode", "Oct", "Notes",
         "Engine", "RegLen", "Evolve", "Lock", "Style", "OctMv", "Pit%", "Rhy%", "Vel%", "GtVar",
         "Ins%", "Rem%", "Rev", "RotBy", "OctSh", "Quant", "Amt", "Attr", "Step", "Clr", "Reset"
@@ -1443,7 +1473,7 @@ static void value_str(const struct genesis_ui *g, u8 p, char *out)
         put_u(out, g->seed);
         return;
     case P_EMODE:
-        s = evo_name[g->evo_mode < 3 ? g->evo_mode : 0];
+        s = lab_name[g->lab < LAB_N ? g->lab : 0];
         while (*s)
             *o++ = *s++;
         *o = 0;
@@ -1554,6 +1584,7 @@ int cfw_genesis_render(void *w)
     (void)w;
     if (!g)
         return 0;
+    bind_lab(g);
 
     fw_eve_begin();
     fw_eve_dlstart();
@@ -1575,12 +1606,14 @@ int cfw_genesis_render(void *w)
         const char *title = "Preview";
         if (g->st == ST_CONFIRM)
             title = "Replace?";
-        else if (g->lab == LAB_EVO)
-            title = evo_name[g->evo_mode < 3 ? g->evo_mode : 0];
+        else if (is_evo(g))
+            title = lab_name[g->lab];
         text(&d, TILE_TEXT_X, 48, C_DIM, 0, title);
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING && g->lockv)
+        if (!is_evo(g) && g->st != ST_CONFIRM)
+            text(&d, 250, 48, C_ACC, 0, lab_name[g->lab]);
+        if (g->lab == LAB_TURING && g->lockv)
             text(&d, 250, 48, C_ERR, 0, "LOCK");
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MARKOV)
+        if (g->lab == LAB_MARKOV)
             text(&d, 250, 66, C_ACC, 0, learn_line(g));
         put_u(a, g->prev.event_count);
         text(&d, 120, 48, C_TEXT, 0, a);
@@ -1623,7 +1656,7 @@ int cfw_genesis_render(void *w)
                 dl(&d, DL_VERTEX2F(x * SUB, 90 * SUB));
                 dl(&d, DL_VERTEX2F((x + 12) * SUB, 118 * SUB));
                 dl(&d, DL_END);
-                if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE && step_prot(g, i)) {
+                if (g->lab == LAB_MUTATE && step_prot(g, i)) {
                     dl(&d, DL_COLOR_RGB(C_ACC));
                     dl(&d, DL_BEGIN(PRIM_RECTS));
                     dl(&d, DL_VERTEX2F(x * SUB, 86 * SUB));
@@ -1637,7 +1670,7 @@ int cfw_genesis_render(void *w)
             }
         }
         put_u(a, occupied);
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING && g->evo.committed.ready) {
+        if (g->lab == LAB_TURING && g->evo.committed.ready) {
             int rk, rbase = (int)g->page * PAGE_STEPS;
             text(&d, 70, 48, C_DIM, 0, "reg");
             put_u(a, g->evo.committed.length);
@@ -1670,18 +1703,17 @@ int cfw_genesis_render(void *w)
             cfw_key_tile(&d, 1, "Apply", 1);
         }
     } else {
-        text(&d, TILE_TEXT_X, 48, C_DIM, 0,
-             g->lab == LAB_EVO ? evo_name[g->evo_mode < 3 ? g->evo_mode : 0] : lab_name[g->lab]);
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_TURING) {
+        text(&d, TILE_TEXT_X, 48, C_DIM, 0, lab_name[g->lab]);
+        if (g->lab == LAB_TURING) {
             text(&d, TILE_TEXT_X, 66, C_DIM, 0, "reg");
             put_u(a, g->reg_len);
             text(&d, 58, 66, C_TEXT, 0, a);
             if (g->lockv)
                 text(&d, 90, 66, C_ERR, 0, "LOCK");
         }
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MARKOV)
+        if (g->lab == LAB_MARKOV)
             text(&d, TILE_TEXT_X, 66, C_ACC, 0, learn_line(g));
-        if (g->lab == LAB_EVO && g->evo_mode == GEN_EVO_MUTATE) {
+        if (g->lab == LAB_MUTATE) {
             int k, base = (int)g->page * PAGE_STEPS;
             for (k = 0; k < PAGE_STEPS; k++) {
                 int si = base + k;

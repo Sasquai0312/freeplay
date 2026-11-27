@@ -220,8 +220,8 @@ def main():
     # ===== Scenario B: Euclid E(5,16) =====
     open_genesis()
     d.s.tap(BTN_TOP, after_ms=250)  # Melody -> Euclid (or whatever; cycle until Euclid)
-    # Ensure Euclid: up to 3 taps
-    for _ in range(3):
+    # Ensure Euclid. Six labs, so allow a full cycle.
+    for _ in range(8):
         if any('Euclid' in x for x in texts()):
             break
         d.s.tap(BTN_TOP, after_ms=200)
@@ -241,7 +241,7 @@ def main():
     clear_track(d, MIDI_TRACK)
     open_genesis()
     # stay on Euclid if persisted
-    for _ in range(3):
+    for _ in range(8):
         if any('Euclid' in x for x in texts()):
             break
         d.s.tap(BTN_TOP, after_ms=200)
@@ -261,14 +261,14 @@ def main():
     # ===== Scenario C: Arp =====
     clear_track(d, MIDI_TRACK)
     open_genesis()
-    for _ in range(3):
+    for _ in range(8):
         if any(x == 'Arp' or x.startswith('Arp') for x in texts()) or any('Arp' in x for x in texts()):
             # may match Lab Arp
             if any(x == 'Arp' for x in texts()) or any('Lab' in x for x in texts()):
                 break
         d.s.tap(BTN_TOP, after_ms=200)
     # Force: cycle until Arp label visible
-    for _ in range(4):
+    for _ in range(8):
         if any(x == 'Arp' for x in texts()):
             break
         d.s.tap(BTN_TOP, after_ms=220)
@@ -291,7 +291,7 @@ def main():
     # ===== Scenario D: Random-walk 16-step (A min pent) =====
     clear_track(d, MIDI_TRACK)
     open_genesis()
-    for _ in range(4):
+    for _ in range(8):
         if any(x == 'Melody' for x in texts()):
             break
         d.s.tap(BTN_TOP, after_ms=200)
@@ -319,7 +319,7 @@ def main():
     # ===== Scenario E: EMPTY_ONLY reject + REPLACE confirm =====
     # Prepare occupied region (leave notes_d)
     open_genesis()
-    for _ in range(4):
+    for _ in range(8):
         if any(x == 'Melody' for x in texts()):
             break
         d.s.tap(BTN_TOP, after_ms=200)

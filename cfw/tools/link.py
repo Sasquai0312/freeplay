@@ -107,8 +107,13 @@ class Obj:
 
 
 class Linker:
-    def __init__(self, base, fw_syms, limit=None, fixed=None, ext=None):
+    def __init__(self, base, fw_syms, limit=None, fixed=None, ext=None, gc=False, gc_keep=()):
         self.base, self.fw, self.limit = base, dict(fw_syms), limit
+        # gc drops extension sections nothing reachable can call. Cave sections, the
+        # extension header, and gc_keep symbols stay. Relocation of what remains is unchanged.
+        self.gc = bool(gc)
+        self.gc_keep = set(gc_keep)
+        self.gc_dropped = 0
         # second region for whole objects (code past the image end): (addr, limit, {obj paths});
         # its section ".ext_hdr" (if any) goes first
         self.ext = ext
@@ -132,7 +137,66 @@ class Linker:
             return False
         return True
 
+    def _mark_reachable(self):
+        from collections import defaultdict
+        ext_paths = self.ext[2] if self.ext else set()
+        symsec = defaultdict(list)
+        for o in self.objs:
+            for s in o.symtab.iter_symbols():
+                shn = s['st_shndx']
+                if isinstance(shn, int) and s.name:
+                    symsec[s.name].append((o.path, shn))
+        edges = defaultdict(set)
+        for o in self.objs:
+            for rs in o.elf.iter_sections():
+                if rs['sh_type'] != 'SHT_REL':
+                    continue
+                tgt = rs['sh_info']
+                if not isinstance(tgt, int) or not self._wanted(o.elf.get_section(tgt)):
+                    continue
+                for r in rs.iter_relocations():
+                    sym = o.symtab.get_symbol(r['r_info_sym'])
+                    if sym['st_info']['type'] == 'STT_SECTION':
+                        edges[(o.path, tgt)].add((o.path, sym['st_shndx']))
+                    elif sym.name:
+                        edges[(o.path, tgt)].add(sym.name)
+        live, stack = set(), []
+
+        def mark(path, si):
+            if not isinstance(si, int) or (path, si) in live:
+                return
+            sec = None
+            for o in self.objs:
+                if o.path == path:
+                    sec = o.elf.get_section(si)
+                    break
+            if sec is None or not self._wanted(sec):
+                return
+            live.add((path, si))
+            stack.append((path, si))
+
+        for o in self.objs:
+            for i, sec in enumerate(o.elf.iter_sections()):
+                if not self._wanted(sec) or not sec['sh_size']:
+                    continue
+                if o.path not in ext_paths or sec.name == '.ext_hdr':
+                    mark(o.path, i)
+        for name in self.gc_keep:
+            for path, shn in symsec.get(name, []):
+                mark(path, shn)
+        while stack:
+            key = stack.pop()
+            for edge in edges.get(key, ()):
+                if isinstance(edge, tuple):
+                    mark(*edge)
+                else:
+                    for path, shn in symsec.get(edge, []):
+                        mark(path, shn)
+        self._live = live
+
     def _layout(self):
+        if self.gc:
+            self._mark_reachable()
         groups = {'text': [], 'rodata': []}
         for o in self.objs:
             for i, sec in enumerate(o.elf.iter_sections()):
@@ -153,6 +217,9 @@ class Linker:
                     continue
                 kind = 'text' if sec['sh_flags'] & SH_FLAGS.SHF_EXECINSTR else 'rodata'
                 if self.ext and o.path in self.ext[2]:
+                    if self.gc and sec.name != '.ext_hdr' and (o.path, i) not in self._live:
+                        self.gc_dropped += sec['sh_size']
+                        continue
                     kind = 'ext_hdr' if sec.name == '.ext_hdr' else 'ext_' + kind
                 groups.setdefault(kind, []).append((o, i, sec))
         addr = self.base

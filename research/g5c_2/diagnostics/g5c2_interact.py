@@ -89,7 +89,7 @@ class H:
                     break
                 addr = base + i
                 b = self.vp.mu.mem_read(addr, 16)
-                if b[4] <= 3 and b[5] <= 3 and b[6] < 45 and b[7] < 16 and 1 <= b[8] <= 64:
+                if b[4] <= 3 and b[5] < 6 and b[6] < 45 and b[7] < 16 and 1 <= b[8] <= 64:
                     hits.append(addr)
                 start = i + 4
         self.base = hits[0] if hits else 0
@@ -151,6 +151,14 @@ class H:
             if label in shown:
                 return True
         return False
+
+    def goto_lab(self, lab, limit=8):
+        """Top cycles Melody, Euclid, Arp, Turing, Markov, Mutate."""
+        for _ in range(limit):
+            if self.u8(OFF_LAB) == lab:
+                return True
+            self.tap(BTN_TOP, 160)
+        return self.u8(OFF_LAB) == lab
 
     def arm(self):
         """Bank + track select + length knob, before Genesis opens. Button 2 is swallowed once the lab is up."""
@@ -231,20 +239,30 @@ def main():
 
     t = h.tap(BTN_TOP)
     check('tap euclid', h.u8(OFF_LAB) == 1 and any('Euclid' in x for x in t), t[-6:])
+    h.shot(os.path.join(shot_dir, '01b_euclid.png'))
     t = h.tap(BTN_TOP)
     check('tap arp', h.u8(OFF_LAB) == 2 and any('Arp' in x for x in t), t[-6:])
+    h.shot(os.path.join(shot_dir, '01c_arp.png'))
     t = h.tap(BTN_TOP)
-    check('tap evo turing', h.u8(OFF_LAB) == 3 and h.u8(OFF_EVO_MODE) == 0 and
+    check('tap turing', h.u8(OFF_LAB) == 3 and h.u8(OFF_EVO_MODE) == 0 and
           any(x == 'Turing' for x in h.texts()[-30:]), t[-6:])
     h.shot(os.path.join(shot_dir, '02_turing_config.png'))
     t = h.tap(BTN_TOP)
-    check('tap back to melody', h.u8(OFF_LAB) == 0, t[-4:])
+    check('tap markov', h.u8(OFF_LAB) == 4 and h.u8(OFF_EVO_MODE) == 1 and
+          any(x == 'Markov' for x in h.texts()[-30:]), t[-6:])
+    h.shot(os.path.join(shot_dir, '02b_markov.png'))
+    t = h.tap(BTN_TOP)
+    check('tap mutate', h.u8(OFF_LAB) == 5 and h.u8(OFF_EVO_MODE) == 2 and
+          any(x == 'Mutate' for x in h.texts()[-30:]), t[-6:])
+    h.shot(os.path.join(shot_dir, '02c_mutate.png'))
+    t = h.tap(BTN_TOP)
+    check('tap wrap to melody', h.u8(OFF_LAB) == 0 and h.u8(OFF_EVO_MODE) == 2, t[-4:])
     for _ in range(3):
         h.tap(BTN_TOP, 180)
     check('back on turing', h.u8(OFF_LAB) == 3 and h.u8(OFF_EVO_MODE) == 0)
 
-    # Phrase length clamp on the live pattern.
-    check('focus length', h.focus('Length'))
+    # Phrase length clamp on the live pattern. Phrase is not the Turing register length.
+    check('focus phrase', h.focus('Phrase'))
     h.turns(-40)
     check('length floor 1', h.u8(OFF_LEN) == 1, h.u8(OFF_LEN))
     native = h.u8(OFF_NATIVE)
@@ -272,8 +290,7 @@ def main():
     h.turns(1)
     check('edit invalidates preview', h.u8(OFF_ST) == 0 and h.u8(OFF_NEV) == 0)
     h.tap(BTN_CLICK, 450)
-    check('focus engine', h.focus('Engine'))
-    h.turns(1)
+    check('markov is a direct lab', h.goto_lab(4) and h.u8(OFF_LAB) == 4)
     check('markov discards turing proposal', h.u8(OFF_EVO_MODE) == 1 and h.u8(OFF_ST) == 0)
     h.shot(os.path.join(shot_dir, '04_markov_step.png'))
 
@@ -314,14 +331,10 @@ def main():
           (h.u8(OFF_STYLE), h.u8(OFF_ST), t[-4:]))
     check('preset is not pending', h.u8(OFF_PENDING) == 0)
 
-    # Mutation controls.
+    # Mutation controls. The lab itself selects the shared engine.
     h.tap(BTN_BACK, 180)
-    h.focus('Engine')
-    for _ in range(3):
-        if h.u8(OFF_EVO_MODE) == 2:
-            break
-        h.turns(1)
-    check('mutate mode', h.u8(OFF_EVO_MODE) == 2, h.u8(OFF_EVO_MODE))
+    check('mutate is a direct lab', h.goto_lab(5))
+    check('mutate mode', h.u8(OFF_LAB) == 5 and h.u8(OFF_EVO_MODE) == 2, h.u8(OFF_EVO_MODE))
     h.shot(os.path.join(shot_dir, '07_mutate_config.png'))
 
     check('focus rot', h.focus('RotBy'))
@@ -390,12 +403,8 @@ def main():
 
     # Lengths. Phrase 1 on the current pattern, then fresh sessions for 32 and 64.
     h.tap(BTN_BACK, 150)
-    h.focus('Engine')
-    for _ in range(4):
-        if h.u8(OFF_EVO_MODE) == 0:
-            break
-        h.turns(-1)
-    h.focus('Length')
+    check('turing lab again', h.goto_lab(3) and h.u8(OFF_EVO_MODE) == 0)
+    h.focus('Phrase')
     h.turns(-40)
     t = h.tap(BTN_CLICK, 500)
     check('phrase length 1', h.u8(OFF_LEN) == 1 and h.u8(OFF_ST) == 1 and h.u8(OFF_NEV) <= 1, 
@@ -416,7 +425,7 @@ def main():
         got = s.set_len(target)
         s.open_genesis()
         s.use_midi()
-        s.focus('Length')
+        s.focus('Phrase')
         for _ in range(80):
             if s.u8(OFF_LEN) >= target:
                 break
@@ -437,11 +446,7 @@ def main():
     s64 = length_session(64, '11_len64.png')
     # Step 16 is on page 1. The step cursor selects that page; the pad toggles it.
     s64.tap(BTN_BACK, 150)
-    s64.focus('Engine')
-    for _ in range(3):
-        if s64.u8(OFF_EVO_MODE) == 2:
-            break
-        s64.turns(1)
+    check('mutate lab for step 16', s64.goto_lab(5) and s64.u8(OFF_EVO_MODE) == 2)
     s64.focus('Step')
     s64.turns(16)
     check('step cursor page', s64.u8(OFF_MSTEP) == 16 and s64.u8(OFF_PAGE) == 1,
@@ -490,6 +495,10 @@ def main():
     t = a.tap(BTN_BOT, 250)
     check('lock survives leave', a.u8(OFF_RECOVERY) == 1 and any('Recovery required' in x for x in t),
           t[-4:])
+    lab_locked = a.u8(OFF_LAB)
+    t = a.tap(BTN_TOP, 200)
+    check('lab change cannot clear recovery', a.u8(OFF_RECOVERY) == 1 and a.u8(OFF_LAB) == lab_locked and
+          any('Recovery required' in x for x in t), t[-4:])
     # Shift+Back must not clear the lock or claim the pattern was restored.
     a.vp.inputs.button(BTN_SHIFT, 0)
     a.d.s.run_ms(20)
@@ -506,12 +515,8 @@ def main():
     a.tap(BTN_BACK, 200)
 
     # Turing reset changes the register immediately and writes no notes.
-    a.focus('Engine')
-    for _ in range(4):
-        if a.u8(OFF_EVO_MODE) == 0:
-            break
-        a.turns(-1)
-    a.focus('Length')
+    check('turing after unlock', a.goto_lab(3) and a.u8(OFF_EVO_MODE) == 0)
+    a.focus('Phrase')
     a.turns(-40)
     a.clear(a.slen() if 0 < a.slen() <= 64 else 16)
     a.tap(BTN_CLICK, 400)

@@ -183,7 +183,7 @@ class Harness:
                 addr = base + i
                 b = self.vp.mu.mem_read(addr, 16)
                 # st, lab, param, track, len must look like a live panel
-                if b[4] <= 3 and b[5] <= 2 and b[6] < 20 and b[7] < 16 and 1 <= b[8] <= 64:
+                if b[4] <= 3 and b[5] < 6 and b[6] < 45 and b[7] < 16 and 1 <= b[8] <= 64:
                     hits.append(addr)
                 start = i + 4
         return hits[0] if hits else 0
@@ -263,7 +263,7 @@ def main():
     h.shift_turns(2)
     h.turns(4)  # 16 -> 20, a value the pattern length does not already show
     shown = h.since(m)
-    check('encoder raises requested length', 'Length' in shown and '20' in shown, shown[-16:])
+    check('encoder raises requested length', 'Phrase' in shown and '20' in shown, shown[-16:])
     check('genesis state found', base != 0, hex(base) if base else 0)
     sample = [bool(h.d.is_on(0, i)) for i in range(16)]
 
@@ -381,7 +381,7 @@ def main():
     h.shift_turns(2)
     h.turns(16)
     shown = h.since(m)
-    check('encoder sets requested length 32', 'Length' in shown and shown.count('32') >= 2, shown[-18:])
+    check('encoder sets requested length 32', 'Phrase' in shown and shown.count('32') >= 2, shown[-18:])
     m = h.mark()
     h.d.s.tap(BTN_CLICK, after_ms=400)
     prev = h.since(m)

@@ -126,8 +126,12 @@ def build(target_json, out_dir=None, verify=True):
         # cave code checks before using any of it: magic, length, sum of the words after it)
         ext = img.get('ext')
         ext_objs = compile_image(tdir, dict(img, sources=ext['sources'], name=img['name'] + '_ext'), out_dir) if ext else []
+        gc_keep = set(img.get('gc_keep', []))
+        if os.environ.get('CFW_DIAG') == '1':
+            gc_keep |= set(img.get('gc_keep_diag', []))
         lk = Linker(base, syms, limit, fixed,
-                    (h(ext['at']), h(ext['limit']), set(ext_objs)) if ext else None)
+                    (h(ext['at']), h(ext['limit']), set(ext_objs)) if ext else None,
+                    gc=bool(img.get('gc')), gc_keep=gc_keep)
         for o in objs + ext_objs:
             lk.add(o)
         code = lk.link()

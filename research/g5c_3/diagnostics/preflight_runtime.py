@@ -24,12 +24,13 @@ from g5c2_interact import (  # noqa: E402
     OFF_RECOVERY, OFF_ST, WMODE_GENESIS,
 )
 
-EXT_LO, EXT_HI = 0x60190B00, 0x6019FB60
-DO_GENERATE = 0x6019CB7D
+EXT_LO = 0x60190B00
+CAVE_LO = 0x6018CA40
 LOCK_DEPTH = 0x2001DAF4
 RESET_SP = 0x20060000
 UI_SIZE = 0xC34
 FW_NEW = 0x600AAB64
+LAB_TURING, LAB_MARKOV, LAB_MUTATE = 3, 4, 5
 
 
 def main():
@@ -41,8 +42,19 @@ def main():
         results.append(bool(ok))
         print(f"{'PASS' if ok else 'FAIL'} {name}" + (f': {detail}' if detail else ''), flush=True)
 
+    syms = {}
+    map_path = os.path.join(os.path.dirname(ppf), 'link.map')
+    for line in open(map_path):
+        parts = line.split()
+        if len(parts) >= 2 and parts[0].startswith('0x'):
+            syms[parts[-1]] = int(parts[0], 16)
+    do_generate = syms['do_generate']
     h = H(ppf, snap)
     h.arm()
+    magic, ext_len = struct.unpack('<II', bytes(h.vp.mu.mem_read(EXT_LO, 8)))
+    ext_hi = EXT_LO + ext_len
+    check('extension header', magic == 0x58574643 and EXT_LO < ext_hi <= 0x601A0B00,
+          f'{magic:#x} len {ext_len}')
     allocs = []
 
     def on_new(vp):
@@ -51,8 +63,8 @@ def main():
     h.vp.hook_addr(FW_NEW, on_new)
     h.open_genesis()
     h.use_midi()
-    for _ in range(4):
-        if h.u8(5) == 3:
+    for _ in range(8):
+        if h.u8(5) == LAB_TURING:
             break
         h.tap(BTN_TOP, 100)
     h.ui()
@@ -61,8 +73,8 @@ def main():
     check('one UI allocation on first open', len(ui_allocs) == 1 and ptr != 0,
           f'ptr {ptr:#x} sizes {allocs}')
 
-    def ensure_evo():
-        """Re-enter Genesis and land on the Evolution lab. A fixed three Tops walks off Evo."""
+    def ensure_lab(lab):
+        """Re-enter Genesis and land on one of the three Evolution labs."""
         if h.wmode() != WMODE_GENESIS:
             h.d.s.tap(0, after_ms=180)
             h.d.s.run_ms(80)
@@ -70,33 +82,15 @@ def main():
             h.open_genesis()
             h.use_midi()
         h.ui()
-        for _ in range(4):
-            if h.u8(5) == 3:
-                break
-            h.tap(BTN_TOP, 80)
-        return h.wmode() == WMODE_GENESIS and h.u8(5) == 3
-
-    def set_engine(mode):
-        if not ensure_evo():
-            return False
-        for _ in range(24):
-            if h.u8(6) == 20:
-                break
-            h.shift_turns(1)
-        if h.u8(6) != 20:
-            return False
-        for _ in range(4):
-            if h.u8(OFF_EVO_MODE) == mode:
-                return True
-            h.turns(1 if h.u8(OFF_EVO_MODE) < mode else -1)
-        return h.u8(OFF_EVO_MODE) == mode
+        return h.wmode() == WMODE_GENESIS and h.goto_lab(lab)
 
     def one_cycle(mode):
-        if not ensure_evo() or h.u8(OFF_EVO_MODE) != mode:
+        lab = LAB_TURING + mode
+        if not ensure_lab(lab) or h.u8(OFF_EVO_MODE) != mode:
             return False
         before = h.notes(16)
         h.tap(BTN_CLICK, 160)
-        preview = (h.u8(5) == 3 and h.u8(OFF_EVO_MODE) == mode and h.u8(OFF_ST) == 1 and
+        preview = (h.u8(5) == lab and h.u8(OFF_EVO_MODE) == mode and h.u8(OFF_ST) == 1 and
                    h.u8(OFF_NEV) > 0 and h.notes(16) == before)
         if not preview:
             print(f'preview fail mode {mode} st={h.u8(OFF_ST)} nev={h.u8(OFF_NEV)} '
@@ -108,7 +102,7 @@ def main():
         return preview and cancelled and left
 
     def run_mode(mode, n):
-        if not set_engine(mode):
+        if not ensure_lab(LAB_TURING + mode):
             print(f'engine {mode} not reached', flush=True)
             return 0
         ok = 0
@@ -121,7 +115,7 @@ def main():
 
     n0 = run_mode(0, 34)
     n1 = run_mode(1, 33)
-    if not ensure_evo():
+    if not ensure_lab(LAB_MUTATE):
         n2 = 0
     else:
         h.use_midi()
@@ -135,7 +129,7 @@ def main():
     check('object still magic after cycles', h.u8(0) == 0x31)
 
     def sample(label):
-        if not ensure_evo():
+        if h.wmode() != WMODE_GENESIS:
             check(label, False, 'not open')
             return
         seen = {'min': 0xFFFFFFFF, 'at': 0, 'entry': 0}
@@ -149,8 +143,8 @@ def main():
         def on_gen(vp):
             seen['entry'] = vp.mu.reg_read(A.UC_ARM_REG_SP)
 
-        hk = h.vp.mu.hook_add(UC_HOOK_CODE, on_code, begin=EXT_LO, end=EXT_HI - 1)
-        h.vp.hook_addr(DO_GENERATE, on_gen)
+        hk = h.vp.mu.hook_add(UC_HOOK_CODE, on_code, begin=CAVE_LO, end=ext_hi - 1)
+        h.vp.hook_addr(do_generate, on_gen)
         h.tap(BTN_CLICK, 200)
         h.vp.mu.hook_del(hk)
         drop = (seen['entry'] - seen['min']) if seen['entry'] and seen['min'] < seen['entry'] else 0
@@ -160,16 +154,16 @@ def main():
               f'below_reset {below_reset} at {seen["at"]:#x}')
         h.tap(BTN_BACK, 80)
 
-    if not set_engine(0):
+    if not ensure_lab(LAB_TURING):
         check('turing sample mode', False)
     sample('stack sample turing preview')
     h.use_midi()
     h.fill(8)
-    check('mutation mode for stack sample', set_engine(2), str(h.u8(OFF_EVO_MODE)))
+    check('mutation mode for stack sample', ensure_lab(LAB_MUTATE), str(h.u8(5)))
     sample('stack sample mutation preview')
 
     # Stage 7 on an empty Turing region. Occupied regions return before fail index 7.
-    if not set_engine(0):
+    if not ensure_lab(LAB_TURING):
         check('restore probe mode', False)
     else:
         h.use_midi()

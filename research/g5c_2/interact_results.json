@@ -38,19 +38,43 @@
     ]
   },
   {
-    "name": "tap evo turing",
+    "name": "tap turing",
     "pass": true,
     "detail": [
       "16",
       "Lab",
-      "Evo",
+      "Turing",
       "Turn: value  Shift+Turn: param",
       "Click: Generate",
       "Shift+Click: Regen"
     ]
   },
   {
-    "name": "tap back to melody",
+    "name": "tap markov",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Markov",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap mutate",
+    "pass": true,
+    "detail": [
+      "16",
+      "Lab",
+      "Mutate",
+      "Turn: value  Shift+Turn: param",
+      "Click: Generate",
+      "Shift+Click: Regen"
+    ]
+  },
+  {
+    "name": "tap wrap to melody",
     "pass": true,
     "detail": [
       "Melody",
@@ -65,7 +89,7 @@
     "detail": null
   },
   {
-    "name": "focus length",
+    "name": "focus phrase",
     "pass": true,
     "detail": null
   },
@@ -127,7 +151,7 @@
     "detail": null
   },
   {
-    "name": "focus engine",
+    "name": "markov is a direct lab",
     "pass": true,
     "detail": null
   },
@@ -224,6 +248,11 @@
   },
   {
     "name": "preset is not pending",
+    "pass": true,
+    "detail": null
+  },
+  {
+    "name": "mutate is a direct lab",
     "pass": true,
     "detail": null
   },
@@ -345,6 +374,11 @@
     "detail": null
   },
   {
+    "name": "turing lab again",
+    "pass": true,
+    "detail": null
+  },
+  {
     "name": "phrase length 1",
     "pass": true,
     "detail": [
@@ -414,6 +448,11 @@
     "detail": 1
   },
   {
+    "name": "mutate lab for step 16",
+    "pass": true,
+    "detail": null
+  },
+  {
     "name": "step cursor page",
     "pass": true,
     "detail": [
@@ -441,7 +480,7 @@
     "detail": [
       "16",
       "Lab",
-      "Evo",
+      "Turing",
       "Turn: value  Shift+Turn: param",
       "Click: Generate",
       "Shift+Click: Regen"
@@ -464,7 +503,7 @@
     "pass": true,
     "detail": [
       "Lab",
-      "Evo",
+      "Turing",
       "Turn: value  Shift+Turn: param",
       "Click: Generate",
       "Shift+Click: Regen",
@@ -517,6 +556,13 @@
     ]
   },
   {
+    "name": "lab change cannot clear recovery",
+    "pass": true,
+    "detail": [
+      "Recovery required"
+    ]
+  },
+  {
     "name": "shift back keeps lock",
     "pass": true,
     "detail": [
@@ -525,6 +571,11 @@
       "Shift+Click: Regen",
       "LOCK"
     ]
+  },
+  {
+    "name": "turing after unlock",
+    "pass": true,
+    "detail": null
   },
   {
     "name": "reset toast",
