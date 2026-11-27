@@ -1205,14 +1205,10 @@ int cfw_genesis_input(u32 kind, u32 id, u32 val)
     if (kind == 1) { /* button */
         if (id == BTN_BACK && val == 0) {
             if (g->recovery && v->shift) {
-                if (!refresh_track(g))
-                    say(ctx, "Need MIDI track", "");
-                else {
-                    g->recovery = 0;
-                    invalidate(g);
-                    g->st = ST_CFG;
-                    say(ctx, "Check pattern", "");
-                }
+                /* A track re-read does not restore the pattern, release a native
+                 * edit, or prove the step data. Apply stays blocked until the
+                 * heap object is gone, which is the next power-on. */
+                say(ctx, "Recovery required", "");
                 g->dirty = 1;
                 return 1;
             }

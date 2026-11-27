@@ -517,13 +517,13 @@
     ]
   },
   {
-    "name": "shift back acknowledges",
+    "name": "shift back keeps lock",
     "pass": true,
     "detail": [
-      "Evo",
       "Turn: value  Shift+Turn: param",
       "Click: Generate",
-      "Shift+Click: Regen"
+      "Shift+Click: Regen",
+      "LOCK"
     ]
   },
   {

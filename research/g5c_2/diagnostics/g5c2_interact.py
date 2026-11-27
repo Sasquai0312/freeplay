@@ -490,14 +490,20 @@ def main():
     t = a.tap(BTN_BOT, 250)
     check('lock survives leave', a.u8(OFF_RECOVERY) == 1 and any('Recovery required' in x for x in t),
           t[-4:])
-    # Shift+Back re-reads the track and clears the lock. It does not leave.
+    # Shift+Back must not clear the lock or claim the pattern was restored.
     a.vp.inputs.button(BTN_SHIFT, 0)
     a.d.s.run_ms(20)
     t = a.tap(BTN_BACK, 300)
     a.vp.inputs.button(BTN_SHIFT, 1)
     a.d.s.run_ms(30)
-    check('shift back acknowledges', a.u8(OFF_RECOVERY) == 0 and a.wmode() == WMODE_GENESIS and
-          any('Check pattern' in x for x in t), t[-4:])
+    check('shift back keeps lock', a.u8(OFF_RECOVERY) == 1 and a.wmode() == WMODE_GENESIS and
+          any('Recovery required' in x for x in t) and not any('Check pattern' in x for x in t),
+          t[-4:])
+    # The production UI has no unlock. The exported setter is the harness-only release
+    # so the rest of this session can keep testing. Then Back returns ST_ERR to config.
+    syms = load_syms(os.path.join(os.path.dirname(ppf), 'link.map'))
+    a.vp.call_fn(syms['cfw_genesis_set_recovery'], 0)
+    a.tap(BTN_BACK, 200)
 
     # Turing reset changes the register immediately and writes no notes.
     a.focus('Engine')
