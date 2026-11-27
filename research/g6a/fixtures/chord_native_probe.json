@@ -1,0 +1,131 @@
+{
+  "results": [
+    {
+      "name": "bank toggle reaches MIDI tracks",
+      "ok": true,
+      "detail": "0->1"
+    },
+    {
+      "name": "MIDI note page shows Pitchbend",
+      "ok": true,
+      "detail": "['Pitchbend', '', 'C4', 'C5', '-', '+', 'Pattern 1', 'Project']"
+    },
+    {
+      "name": "knob 7 opens Chord and the fresh value is None",
+      "ok": true,
+      "detail": "['Perform', 'None', 'Chord', '', '', '', 'Pattern 1', 'Project']"
+    },
+    {
+      "name": "knob walks the 21 stock chord names in order",
+      "ok": true,
+      "detail": "[(1, 'Power 4th'), (2, 'Power 5th'), (3, 'Major'), (4, 'Minor'), (5, 'Dim'), (6, 'Aug'), (7, 'Sus2'), (8, 'Sus4'), (9, 'Maj 6th'), (10, 'Min 6th'), (11, 'Maj 7th'), (12, 'Min 7th'), (13, 'MinMaj7'), (14, 'Dom 7th'), (15, 'Maj 9th'), (16, 'Min 9th'), (17, 'Maj 11th'), (18, 'Min 11th'), (19, 'Maj 13th'), (20, 'Min 13th')]"
+    },
+    {
+      "name": "knob stops at Min 13th",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "chord edits do not change note, velocity, or duration",
+      "ok": true,
+      "detail": "(60, 100, 60)"
+    },
+    {
+      "name": "value 20 is the halfword at step+18",
+      "ok": true,
+      "detail": "000014000000"
+    },
+    {
+      "name": "setParam 3 reads back Major",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "setParam 21 clamps to 20",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "setParam 255 clamps to 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "setParam -1 clamps to 0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "step 5 was not written",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sample-track param 10 is unchanged by a MIDI chord write",
+      "ok": true,
+      "detail": "None"
+    },
+    {
+      "name": "note and velocity still shared",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "restore writes None",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "live MIDI pattern length is 16",
+      "ok": true,
+      "detail": "16"
+    },
+    {
+      "name": "chord field is stored on steps 0, 15, 16, 31, 32 and 63",
+      "ok": true,
+      "detail": "{0: 3, 15: 3, 16: 3, 31: 3, 32: 3, 63: 3}"
+    },
+    {
+      "name": "sample-track knob 7 is not Chord",
+      "ok": true,
+      "detail": "['Perform', 'No Sample', 'Sample Start', 'No Sample', 'Sample End', '', 'Pattern 1', 'Project']"
+    },
+    {
+      "name": "transport is running and the parameter flush reads chord index 10",
+      "ok": true,
+      "detail": "playing=1 callers={1611707634: 2}"
+    },
+    {
+      "name": "virtual USB MIDI transmit was not entered while playing",
+      "ok": true,
+      "detail": "{'n': 0}"
+    }
+  ],
+  "chord_apply_callers": {
+    "0x6010b4f2": 2
+  },
+  "usb_midi_tx_while_playing": 0,
+  "labels": [
+    "None",
+    "Power 4th",
+    "Power 5th",
+    "Major",
+    "Minor",
+    "Dim",
+    "Aug",
+    "Sus2",
+    "Sus4",
+    "Maj 6th",
+    "Min 6th",
+    "Maj 7th",
+    "Min 7th",
+    "MinMaj7",
+    "Dom 7th",
+    "Maj 9th",
+    "Min 9th",
+    "Maj 11th",
+    "Min 11th",
+    "Maj 13th",
+    "Min 13th"
+  ]
+}
